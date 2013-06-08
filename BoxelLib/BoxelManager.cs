@@ -5,6 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using BoxelRenderer;
 using SharpDX;
+using SharpDX.Direct3D11;
+using Buffer = SharpDX.Direct3D11.Buffer;
 
 namespace BoxelLib
 {
@@ -25,6 +27,7 @@ namespace BoxelLib
         private readonly IBoxelContainer Boxels;
         private readonly IBoxelRenderer Renderer;
         private readonly RenderDevice RenderDevice;
+        private readonly Buffer PerFrameData;
         /// <summary>
         /// Minimum number of boxels to draw from camera in all directions.
         /// </summary>
@@ -45,6 +48,9 @@ namespace BoxelLib
             this.Renderer = new BoxelPointRenderer(RenderDevice.D3DDevice);
             this.DrawDistance = 32;
             this.RenderDevice = RenderDevice;
+            this.PerFrameData = new Buffer(RenderDevice.D3DDevice, Matrix.SizeInBytes, ResourceUsage.Dynamic,
+                                           BindFlags.ConstantBuffer, CpuAccessFlags.Write, ResourceOptionFlags.None, 0);
+            this.RenderDevice.D3DDevice.ImmediateContext1.VertexShader.SetConstantBuffer(0, this.PerFrameData);
         }
 
         public void Add(IBoxel Boxel, Int3 Position)
@@ -67,8 +73,20 @@ namespace BoxelLib
                 this.Renderer.SetView(this.Boxels.BoxelsInRadius(CenterChunk, this.DrawDistance), 
                     Hash, this.RenderDevice.D3DDevice);
             }
+            this.UpdatePerFrameData(RenderCamera);
             this.Renderer.Render(this.RenderDevice.D3DDevice.ImmediateContext1);
             this.RenderDevice.Render();
+        }
+
+        private void UpdatePerFrameData(ICamera RenderCamera)
+        {
+            DataStream PerFramePointer;
+            this.RenderDevice.D3DDevice.ImmediateContext1.MapSubresource(this.PerFrameData, 0, MapMode.WriteDiscard,
+                                                                            MapFlags.None, out PerFramePointer);
+            var World = Matrix.Translation(new Vector3(0,0,0));
+            var WorldViewProj = World * RenderCamera.View * RenderCamera.Projection;
+            PerFramePointer.Write(Matrix.Transpose(WorldViewProj));
+            this.RenderDevice.D3DDevice.ImmediateContext1.UnmapSubresource(this.PerFrameData, 0);
         }
     }
 }

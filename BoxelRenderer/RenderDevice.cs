@@ -156,7 +156,7 @@ namespace BoxelRenderer
                 FPSWatch.Restart();
             }
             this.SwapChain.Present(0, PresentFlags.None);
-            this.ImmediateContext.ClearRenderTargetView(this.BackBuffer, Color.HotPink);
+            this.ImmediateContext.ClearRenderTargetView(this.BackBuffer, Color.Black);
             this.ImmediateContext.OutputMerger.SetTargets(this.BackBuffer);
         }
     }

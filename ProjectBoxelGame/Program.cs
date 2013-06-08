@@ -2,6 +2,8 @@
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Reflection;
 using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Serialization;
@@ -19,6 +21,7 @@ namespace ProjectBoxelGame
         static void Main(string[] args)
         {
             SetupOutputRedirects();
+            Trace.WriteLine(String.Format("Project Boxel v{0}", FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location).FileVersion));
             Trace.WriteLine("Creating RenderForm...");
             RenderForm Window = new RenderForm("Project Boxel (Open PV Editor)");
             Window.FormBorderStyle = FormBorderStyle.Fixed3D;
@@ -55,7 +58,7 @@ namespace ProjectBoxelGame
             Trace.WriteLine(String.Format("Done adding Boxels. Total Boxels: {0}     Total Voxels in VBL: {1}", Manager.BoxelCount, Level.voxels.Length));
             Trace.WriteLine(String.Format("Count for good measure: {0}", Manager.AllBoxels.Count()));
             Trace.WriteLine("Close render window to exit.");
-            var Camera = new BasicCamera(new Vector3(0, 0, 0), new Vector3(1, 0, 0));
+            var Camera = new BasicCamera(new Vector3(0, 2, 0), new Vector3(1, 0, 0));
             RenderLoop.Run(Window, () => Manager.Render(Camera));
             Trace.WriteLine(String.Format("Exiting normally at {0}", DateTime.Now.ToString()));
         }

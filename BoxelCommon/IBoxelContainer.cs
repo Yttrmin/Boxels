@@ -76,7 +76,8 @@ namespace BoxelLib
 
         public IEnumerable<IBoxel> BoxelsInRadius(Byte3 Position, int RadiusInBoxels)
         {
-            return this.Chunks[Position.GetHashCode()].AllBoxels;
+            return AllBoxels;
+            //return this.Chunks[Position.GetHashCode()].AllBoxels;
         }
 
         public void Compact()

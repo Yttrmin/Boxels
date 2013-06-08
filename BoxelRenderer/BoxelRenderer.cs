@@ -55,7 +55,7 @@ namespace BoxelRenderer
             {
                 foreach (var Boxel in Boxels)
                 {
-                    VertexStream.Write(new Vector3(Boxel.Position.X/2, Boxel.Position.Y/2, Boxel.Position.Z/2));
+                    VertexStream.Write((Vector3)Boxel.Position);
                 }
                 this.VertexBuffer = new Buffer(Device, VertexStream, (int)VertexStream.Length, ResourceUsage.Immutable,
                                                BindFlags.VertexBuffer, CpuAccessFlags.None, ResourceOptionFlags.None, 0);
