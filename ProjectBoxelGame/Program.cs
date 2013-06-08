@@ -30,24 +30,34 @@ namespace ProjectBoxelGame
             Window.Show();
             var Serializer = new XmlSerializer(typeof(vbl));
             vbl Level;
+            Stopwatch Timer = new Stopwatch();
+            Timer.Start();
             using (var Reader = XmlReader.Create("test_map_big.vbl"))
             {
                 Level = (vbl)Serializer.Deserialize(Reader);
             }
+            Timer.Stop();
+            Trace.WriteLine(String.Format("Took {0}ms to deserialize VBL.", Timer.ElapsedMilliseconds));
+            Timer.Reset();
             var Manager = new BoxelManager(new BoxelManager.BoxelManagerSettings()
                 {
                     Width = Level.properties.width,
                     Length = Level.properties.depth,
                     Height = Level.properties.depth
-                });
+                }, Renderer);
+            Timer.Start();
             foreach (var Voxel in Level.voxels)
             {
                 Manager.Add(new BasicBoxel(new Int3(Voxel.x, Voxel.y, Voxel.z), 1), new Int3(Voxel.x, Voxel.y, Voxel.z));
             }
+            Timer.Stop();
+            Trace.WriteLine(String.Format("Took {0}ms to convert voxels to boxels and add to manager.", Timer.ElapsedMilliseconds));
             Trace.WriteLine(String.Format("Done adding Boxels. Total Boxels: {0}     Total Voxels in VBL: {1}", Manager.BoxelCount, Level.voxels.Length));
             Trace.WriteLine(String.Format("Count for good measure: {0}", Manager.AllBoxels.Count()));
             Trace.WriteLine("Close render window to exit.");
-            RenderLoop.Run(Window, Renderer.Render);
+            var Camera = new BasicCamera(new Vector3(0, 0, 0), new Vector3(1, 0, 0));
+            RenderLoop.Run(Window, () => Manager.Render(Camera));
+            Trace.WriteLine(String.Format("Exiting normally at {0}", DateTime.Now.ToString()));
         }
 
         private static void LogUnhandledException(Object Sender, UnhandledExceptionEventArgs Args)
@@ -72,6 +82,7 @@ namespace ProjectBoxelGame
             Trace.AutoFlush = true;
 
             AppDomain.CurrentDomain.UnhandledException += LogUnhandledException;
+            Trace.WriteLine(String.Format("Log started at {0}", DateTime.Now.ToString()));
         }
     }
 }

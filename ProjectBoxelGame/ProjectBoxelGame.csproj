@@ -31,7 +31,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>true</Prefer32Bit>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="SharpDX, Version=2.5.0.0, Culture=neutral, processorArchitecture=MSIL">
@@ -48,6 +48,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Game.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -55,6 +56,10 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\BoxelCommon\BoxelCommon.csproj">
+      <Project>{16E84D66-DB75-47EA-BD42-B49BEAC90E8F}</Project>
+      <Name>BoxelCommon</Name>
+    </ProjectReference>
     <ProjectReference Include="..\BoxelLib\BoxelLib.csproj">
       <Project>{92a2d890-d956-49f2-b23f-4f87eb010b61}</Project>
       <Name>BoxelLib</Name>

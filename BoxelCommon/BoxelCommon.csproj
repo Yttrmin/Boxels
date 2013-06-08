@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{92A2D890-D956-49F2-B23F-4F87EB010B61}</ProjectGuid>
+    <ProjectGuid>{16E84D66-DB75-47EA-BD42-B49BEAC90E8F}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>BoxelLib</RootNamespace>
-    <AssemblyName>BoxelLib</AssemblyName>
+    <RootNamespace>BoxelCommon</RootNamespace>
+    <AssemblyName>BoxelCommon</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -31,11 +31,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="SharpDX">
-      <HintPath>..\..\..\..\SharpDX-master\Bin\Standard-net40\SharpDX.dll</HintPath>
-    </Reference>
-    <Reference Include="SharpDX.Direct3D11, Version=2.5.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\SharpDX-master\Bin\Win8Desktop-net40\SharpDX.Direct3D11.dll</HintPath>
+      <HintPath>..\..\..\..\SharpDX-master\Bin\Win8Desktop-net40\SharpDX.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -46,27 +42,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BoxelManager.cs" />
-    <Compile Include="Grid.cs" />
-    <Compile Include="ILocalPlayer.cs" />
+    <Compile Include="IBoxel.cs" />
+    <Compile Include="IBoxelContainer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\BoxelCommon\BoxelCommon.csproj">
-      <Project>{16E84D66-DB75-47EA-BD42-B49BEAC90E8F}</Project>
-      <Name>BoxelCommon</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\BoxelRenderer\BoxelRenderer.csproj">
-      <Project>{39B37D46-62F0-4883-9DE4-0AB549D97F0D}</Project>
-      <Name>BoxelRenderer</Name>
-    </ProjectReference>
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <ProjectExtensions>
-    <VisualStudio>
-      <UserProperties BuildVersion_BuildVersioningStyle="None.None.None.Increment" />
-    </VisualStudio>
-  </ProjectExtensions>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

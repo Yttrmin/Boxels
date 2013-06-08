@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using SharpDX;
@@ -13,13 +14,14 @@ namespace BoxelLib
         IBoxel AtOrDefault(Int3 Position);
         void Add(IBoxel Boxel, Int3 Position);
         IEnumerable<IBoxel> AllBoxels { get; }
+        IEnumerable<IBoxel> BoxelsInRadius(Byte3 ChunkPosition, int RadiusInBoxels);
         int Count { get; }
         void Compact();
     }
 
     public class ConstantRandomContainer : IBoxelContainer
     {
-        private const int ChunkSize = 16;
+        internal const int ChunkSize = 16;
         private readonly IDictionary<int, ConstantChunk> Chunks;
 
         public ConstantRandomContainer()
@@ -72,9 +74,9 @@ namespace BoxelLib
             }
         }
 
-        public IEnumerable<IBoxel> BoxelsInRadius(Int3 Position, float RadiusInBoxels)
+        public IEnumerable<IBoxel> BoxelsInRadius(Byte3 Position, int RadiusInBoxels)
         {
-            throw new NotImplementedException();
+            return this.Chunks[Position.GetHashCode()].AllBoxels;
         }
 
         public void Compact()
@@ -122,6 +124,41 @@ namespace BoxelLib
         }
     }
 
+    public static class ChunkPosition
+    {
+        public static Byte3 From(Vector3 Vect)
+        {
+            checked
+            {
+                return new Byte3((byte) (((byte) Vect.X)/ConstantRandomContainer.ChunkSize),
+                                 (byte) (((byte) Vect.Y)/ConstantRandomContainer.ChunkSize),
+                                 (byte) (((byte) Vect.Z)/ConstantRandomContainer.ChunkSize));
+            }
+        }
+
+        public static int HashSphere(Byte3 Center, int Radius)
+        {
+            checked
+            {
+                var ChunkRadius = (byte) (Radius/ConstantRandomContainer.ChunkSize);
+                var LowX = new Byte3((byte) (Center.X - Math.Min(ChunkRadius, Center.X)), Center.Y, Center.Z);
+                var HighX = new Byte3((byte) (Center.X + Math.Min(ChunkRadius, byte.MaxValue - Center.X)), Center.Y,
+                                      Center.Z);
+
+                var LowY = new Byte3(Center.X, (byte) (Center.Y - Math.Min(ChunkRadius, Center.Y)), Center.Z);
+                var HighY = new Byte3(Center.X, (byte) (Center.Y + Math.Min(ChunkRadius, byte.MaxValue - Center.Y)),
+                                      Center.Z);
+
+                var LowZ = new Byte3(Center.X, Center.Y, (byte) (Center.Z - Math.Min(ChunkRadius, Center.Z)));
+                var HighZ = new Byte3(Center.X, Center.Y,
+                                      (byte) (Center.Z + Math.Min(ChunkRadius, byte.MaxValue - Center.Z)));
+                return LowX.GetHashCode() + HighX.GetHashCode() + LowY.GetHashCode() + HighY.GetHashCode() +
+                       LowZ.GetHashCode() + HighZ.GetHashCode();
+            }
+        }
+    }
+
+    [StructLayout(LayoutKind.Auto)]
     public struct Byte3
     {
         public readonly byte X;
@@ -135,11 +172,21 @@ namespace BoxelLib
             this.Z = Z;
         }
 
+        public Byte3(int HashCode)
+        {
+            throw new NotImplementedException();
+        }
+
         public Byte3(Int3 XYZ)
         {
             this.X = (byte)XYZ.X;
             this.Y = (byte)XYZ.Y;
             this.Z = (byte)XYZ.Z;
+        }
+
+        public Vector3 ToVector3()
+        {
+            return new Vector3(X, Y, Z);
         }
 
         public override int GetHashCode()
@@ -411,7 +458,8 @@ namespace BoxelLib
 9586724,
 9586944,
 9586948,
-9586976
+9586976,
+9586980
 };
             YWeave = new[] {
 0,
@@ -668,7 +716,8 @@ namespace BoxelLib
 4793362,
 4793472,
 4793474,
-4793488
+4793488,
+4793490
 };
             ZWeave = new[] {
 0,
@@ -925,8 +974,10 @@ namespace BoxelLib
 2396681,
 2396736,
 2396737,
-2396744
+2396744,
+2396745
 };
+
 
         }
     }

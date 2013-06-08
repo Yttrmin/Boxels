@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Text;
 using SharpDX;
 using SharpDX.DXGI;
 using SharpDX.Direct3D;
@@ -13,16 +14,23 @@ namespace BoxelRenderer
     {
         private Adapter2 Adapter;
         private Factory2 Factory;
-        private SharpDX.Direct3D11.Device1 D3DDevice;
+        public SharpDX.Direct3D11.Device1 D3DDevice { get; private set; }
         private DeviceContext1 ImmediateContext;
         private Device2 DXGIDevice;
         private SwapChain1 SwapChain;
         private RenderTargetView BackBuffer;
+        private ViewportF Viewport;
         private bool PlatformUpdate;
+        private Stopwatch FPSWatch;
+        private int FrameCount;
+        private const bool UseFlipSequential = true;
+        public double FrameRate { get; private set; }
 
         public RenderDevice(RenderForm Window)
         {
             this.InitializeDirect3D(Window);
+            this.FPSWatch = new Stopwatch();
+            this.FPSWatch.Start();
         }
 
         private void InitializeDirect3D(RenderForm Window)
@@ -42,14 +50,14 @@ namespace BoxelRenderer
                     BufferCount = 2,
                     Width = 0,
                     Height = 0,
-                    Scaling = this.PlatformUpdate ? Scaling.Stretch : Scaling.None,
+                    Scaling = this.PlatformUpdate || UseFlipSequential ? Scaling.Stretch : Scaling.None,
                     Format = Format.B8G8R8A8_UNorm,
                     Stereo = false,
-                    SwapEffect = SwapEffect.FlipSequential,
+                    SwapEffect = UseFlipSequential ? SwapEffect.FlipSequential : SwapEffect.Sequential,
                     SampleDescription = new SampleDescription(1, 0),
-                    Usage = Usage.RenderTargetOutput
+                    Usage = Usage.RenderTargetOutput 
                 };
-            var FeatureLevels = new FeatureLevel[]
+            var FeatureLevels = new[]
                 {FeatureLevel.Level_11_1, FeatureLevel.Level_11_0, FeatureLevel.Level_10_1, FeatureLevel.Level_10_0};
             var OldColor = Console.ForegroundColor;
             Console.ForegroundColor = ConsoleColor.Blue;
@@ -59,7 +67,7 @@ namespace BoxelRenderer
             }
             var Flags = DeviceCreationFlags.BgraSupport;
 #if DEBUG
-            //Flags |= this.PlatformUpdate ? DeviceCreationFlags.None : DeviceCreationFlags.Debug;
+            Flags |= this.PlatformUpdate ? DeviceCreationFlags.None : DeviceCreationFlags.Debug;
 #endif
             this.D3DDevice = new SharpDX.Direct3D11.Device(this.Adapter, Flags)
                 .QueryInterface<SharpDX.Direct3D11.Device1>();
@@ -73,15 +81,83 @@ namespace BoxelRenderer
             var BackBufferTexture = this.SwapChain.GetBackBuffer<Texture2D>(0);
             this.BackBuffer = new RenderTargetView(this.D3DDevice, BackBufferTexture);
             Trace.WriteLine("Success.");
-            this.Render();
+            Trace.WriteLine(this.GetFeaturesString());
+            this.InitializeViewport();
             Trace.WriteLine("-------------------End D3D11.1------------------------------");
+        }
+
+        private void InitializeViewport()
+        {
+            this.Viewport = new Viewport(0, 0, this.SwapChain.Description1.Width,
+                this.SwapChain.Description1.Height, 0, 1);
+            this.ImmediateContext.Rasterizer.SetViewports(this.Viewport);
+        }
+
+        private string GetFeaturesString()
+        {
+            var Builder = new StringBuilder();
+            Builder.AppendLine("==========Printing Features.==========");
+            Builder.AppendFormat("Feature Level: {0}", this.D3DDevice.FeatureLevel);
+            Builder.AppendLine();
+            Builder.AppendLine("*Importantest:");
+            bool ConcurrentResources, CommandList;
+            this.D3DDevice.CheckThreadingSupport(out ConcurrentResources, out CommandList);
+            Builder.AppendFormat("Concurrent Resource Creation support: {0}", ConcurrentResources);
+            Builder.AppendLine();
+            Builder.AppendFormat("Command List support: {0}", CommandList);
+            Builder.AppendLine();
+            Builder.AppendFormat("Compute Shader support: {0}",
+                                this.D3DDevice.CheckFeatureSupport(Feature.ComputeShaders));
+            Builder.AppendLine();
+            Builder.AppendLine("*Other:");
+            var Features = this.D3DDevice.CheckD3D11Feature();
+            Builder.AppendFormat("Non-power-of-2 texture support: {0}", this.D3DDevice.CheckFullNonPow2TextureSupport());
+            Builder.AppendLine();
+            Builder.AppendFormat("Partial update of constant buffers support: {0}", Features.ConstantBufferPartialUpdate);
+            Builder.AppendLine();
+            Builder.AppendFormat("Offset into constant buffers support: {0}", Features.ConstantBufferOffsetting);
+            Builder.AppendLine();
+            Builder.AppendFormat("Extended resource sharing support: {0}", Features.ExtendedResourceSharing);
+            Builder.AppendLine();
+            Builder.AppendFormat("Can map no-overwrite dynamic SRVs: {0}", Features.MapNoOverwriteOnDynamicBufferSRV);
+            Builder.AppendLine();
+            Builder.AppendFormat("Can map no-overwrite dynamic constant buffers: {0}", Features.MapNoOverwriteOnDynamicConstantBuffer);
+            Builder.AppendLine();
+            Builder.AppendFormat("Can call DeviceContext1.ClearView(): {0}", Features.ClearView);
+            Builder.AppendLine();
+            Builder.AppendFormat("Can call DeviceContext1.CopySubsourceRegion1() with overlaps: {0}",
+                                 Features.CopyWithOverlap);
+            Builder.AppendLine();
+            Builder.AppendFormat("Logic operations supported in blend state: {0}", Features.OutputMergerLogicOp);
+            Builder.AppendLine();
+            Builder.AppendFormat("UAV-only rendering: {0}", Features.UAVOnlyRenderingForcedSampleCount);
+            Builder.AppendLine();
+            Builder.AppendFormat("SAD4 instruction support: {0}", Features.SAD4ShaderInstructions);
+            Builder.AppendLine();
+            Builder.AppendFormat("Extended doubles instruction support: {0}", Features.ExtendedDoublesShaderInstructions);
+            Builder.AppendLine();
+            Builder.AppendFormat("Driver supports *.Discard*() functions: {0}", Features.DiscardAPIsSeenByDriver);
+            Builder.AppendLine();
+            Builder.AppendFormat("Driver supports CopyFlags: {0}", Features.FlagsForUpdateAndCopySeenByDriver);
+            Builder.AppendLine();
+            Builder.AppendLine("=========End Features.==========");
+            return Builder.ToString();
         }
 
         public void Render()
         {
-            //this.ImmediateContext.OutputMerger.SetTargets(this.BackBuffer);
+            this.FrameCount++;
+            var Elapsed = (double)FPSWatch.ElapsedTicks / (double)Stopwatch.Frequency;
+            if (Elapsed >= 1.0f)
+            {
+                this.FrameRate = FrameCount/Elapsed;
+                this.FrameCount = 0;
+                Trace.WriteLine(String.Format("FPS: {0}", this.FrameRate));
+                FPSWatch.Restart();
+            }
+            this.SwapChain.Present(0, PresentFlags.None);
             this.ImmediateContext.ClearRenderTargetView(this.BackBuffer, Color.HotPink);
-            this.SwapChain.Present(1, PresentFlags.None);
+            this.ImmediateContext.OutputMerger.SetTargets(this.BackBuffer);
         }
     }
 }

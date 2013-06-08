@@ -52,9 +52,9 @@ namespace LookupGenerator
                     20,
                     23
                 };
-            XWeave = new int[byte.MaxValue];
-            YWeave = new int[byte.MaxValue];
-            ZWeave = new int[byte.MaxValue];
+            XWeave = new int[byte.MaxValue+1];
+            YWeave = new int[byte.MaxValue+1];
+            ZWeave = new int[byte.MaxValue+1];
 
             XUnWeave = new int[XWeave.Length];
             YUnWeave = new int[YWeave.Length];
@@ -174,7 +174,8 @@ namespace LookupGenerator
             for (int i = 0; i < Weave.Length; i++)
             {
                 Weave[i] = Adder.Value;
-                Adder.Increment();
+                if( i != Weave.Length-1)
+                    Adder.Increment();
             }
         }
     }
