@@ -23,7 +23,7 @@ namespace BoxelRenderer
         private bool PlatformUpdate;
         private Stopwatch FPSWatch;
         private int FrameCount;
-        private const bool UseFlipSequential = true;
+        private const bool UseFlipSequential = false;
         public double FrameRate { get; private set; }
 
         public RenderDevice(RenderForm Window)
@@ -31,6 +31,27 @@ namespace BoxelRenderer
             this.InitializeDirect3D(Window);
             this.FPSWatch = new Stopwatch();
             this.FPSWatch.Start();
+            this.D3DDevice.ImmediateContext1.Rasterizer.State = new RasterizerState1(this.D3DDevice, new RasterizerStateDescription1()
+                {
+                    CullMode = CullMode.None,
+                    FillMode = FillMode.Solid
+                });
+        }
+
+        public void Render()
+        {
+            this.FrameCount++;
+            var Elapsed = (double)FPSWatch.ElapsedTicks / (double)Stopwatch.Frequency;
+            if (Elapsed >= 1.0f)
+            {
+                this.FrameRate = FrameCount / Elapsed;
+                this.FrameCount = 0;
+                Trace.WriteLine(String.Format("FPS: {0}", this.FrameRate));
+                FPSWatch.Restart();
+            }
+            this.SwapChain.Present(0, PresentFlags.None);
+            this.ImmediateContext.ClearRenderTargetView(this.BackBuffer, Color.Black);
+            this.ImmediateContext.OutputMerger.SetTargets(this.BackBuffer);
         }
 
         private void InitializeDirect3D(RenderForm Window)
@@ -50,7 +71,7 @@ namespace BoxelRenderer
                     BufferCount = 2,
                     Width = 0,
                     Height = 0,
-                    Scaling = this.PlatformUpdate || UseFlipSequential ? Scaling.Stretch : Scaling.None,
+                    Scaling = this.PlatformUpdate || !UseFlipSequential ? Scaling.Stretch : Scaling.None,
                     Format = Format.B8G8R8A8_UNorm,
                     Stereo = false,
                     SwapEffect = UseFlipSequential ? SwapEffect.FlipSequential : SwapEffect.Sequential,
@@ -81,7 +102,7 @@ namespace BoxelRenderer
             var BackBufferTexture = this.SwapChain.GetBackBuffer<Texture2D>(0);
             this.BackBuffer = new RenderTargetView(this.D3DDevice, BackBufferTexture);
             Trace.WriteLine("Success.");
-            Trace.WriteLine(this.GetFeaturesString());
+            //Trace.WriteLine(this.GetFeaturesString());
             this.InitializeViewport();
             Trace.WriteLine("-------------------End D3D11.1------------------------------");
         }
@@ -142,22 +163,6 @@ namespace BoxelRenderer
             Builder.AppendLine();
             Builder.AppendLine("=========End Features.==========");
             return Builder.ToString();
-        }
-
-        public void Render()
-        {
-            this.FrameCount++;
-            var Elapsed = (double)FPSWatch.ElapsedTicks / (double)Stopwatch.Frequency;
-            if (Elapsed >= 1.0f)
-            {
-                this.FrameRate = FrameCount/Elapsed;
-                this.FrameCount = 0;
-                Trace.WriteLine(String.Format("FPS: {0}", this.FrameRate));
-                FPSWatch.Restart();
-            }
-            this.SwapChain.Present(0, PresentFlags.None);
-            this.ImmediateContext.ClearRenderTargetView(this.BackBuffer, Color.Black);
-            this.ImmediateContext.OutputMerger.SetTargets(this.BackBuffer);
         }
     }
 }

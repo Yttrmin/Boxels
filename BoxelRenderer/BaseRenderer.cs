@@ -11,7 +11,7 @@ using Buffer = SharpDX.Direct3D11.Buffer;
 
 namespace BoxelRenderer
 {
-    internal abstract class BaseRenderer : IBoxelRenderer
+    public abstract class BaseRenderer : IBoxelRenderer
     {
         public int ViewHash { get; private set; }
         private InputLayout Layout;
@@ -21,6 +21,7 @@ namespace BoxelRenderer
         private Buffer VertexBuffer;
         private VertexBufferBinding VertexBufferBinding;
         private PrimitiveTopology Topology;
+        private int VertexSizeInBytes;
         private int BoxelCount;
 
         protected BaseRenderer(string ShaderFileName, string VertexEntryName, string GeometryEntryName,
@@ -33,7 +34,7 @@ namespace BoxelRenderer
         public void SetView(IEnumerable<IBoxel> Boxels, int SphereHash, Device1 Device)
         {
             Debug.Assert(SphereHash != this.ViewHash);
-            this.GenerateVertexBuffer(Boxels, Device, out VertexBuffer, out VertexBufferBinding);
+            this.GenerateVertexBuffer(Boxels, Device, out VertexBuffer, out VertexBufferBinding, this.VertexSizeInBytes);
             this.BoxelCount = Boxels.Count();
             this.ViewHash = SphereHash;
         }
@@ -46,11 +47,22 @@ namespace BoxelRenderer
             Context.VertexShader.Set(this.VertexShader);
             Context.GeometryShader.Set(this.GeometryShader);
             Context.PixelShader.Set(this.PixelShader);
+            this.PreRender(Context);
             Context.Draw(this.BoxelCount, 0);
         }
 
+        /// <summary>
+        /// Allows child classes to do their own rendering work before the Draw call.
+        /// The child does not have to worry about (and should not mess with):
+        /// InputLayout, PrimitiveTopology, index 0 VertexBuffer (from Generate), VertexShader,
+        /// GeometryShader, PixelShader, or making the Draw() call for boxels. Similarly the child
+        /// should not touch the index 0 constant buffer for VertexShader.
+        /// </summary>
+        /// <param name="Context"></param>
+        protected abstract void PreRender(DeviceContext1 Context);
+
         protected abstract void GenerateVertexBuffer(IEnumerable<IBoxel> Boxels, Device1 Device,
-            out Buffer VertexBuffer, out VertexBufferBinding Binding);
+            out Buffer VertexBuffer, out VertexBufferBinding Binding, int VertexSizeInBytes);
 
         protected abstract void SetupInputElements(out InputElement[] Elements, out int VertexSizeInBytes);
 
@@ -63,7 +75,7 @@ namespace BoxelRenderer
 
             using (
                 var Result = ShaderBytecode.CompileFromFile(ShaderFileName, VertexEntryName, "vs_4_0",
-                                                              ShaderFlags.WarningsAreErrors))
+                                                              ShaderFlags.WarningsAreErrors | ShaderFlags.OptimizationLevel3))
             {
                 VertexShaderSignature = new ShaderSignature(Result.Bytecode);
                 this.VertexShader = new VertexShader(Device, Result.Bytecode);
@@ -73,7 +85,7 @@ namespace BoxelRenderer
             {
                 using (
                     var Result = ShaderBytecode.CompileFromFile(ShaderFileName, GeometryEntryName, "gs_4_0",
-                                                                ShaderFlags.WarningsAreErrors))
+                                                                ShaderFlags.WarningsAreErrors | ShaderFlags.OptimizationLevel3))
                 {
                     this.GeometryShader = new GeometryShader(Device, Result.Bytecode);
                 }
@@ -81,7 +93,7 @@ namespace BoxelRenderer
 
             using (
                 var Result = ShaderBytecode.CompileFromFile(ShaderFileName, PixelEntryName, "ps_4_0",
-                                                              ShaderFlags.WarningsAreErrors))
+                                                              ShaderFlags.WarningsAreErrors | ShaderFlags.OptimizationLevel3))
             {
                 this.PixelShader = new PixelShader(Device, Result.Bytecode);
             }
@@ -93,8 +105,7 @@ namespace BoxelRenderer
         private void InitializeLayout(Device1 Device, ShaderSignature VertexShaderSignature)
         {
             InputElement[] Elements;
-            int VertexSizeInBytes;
-            this.SetupInputElements(out Elements, out VertexSizeInBytes);
+            this.SetupInputElements(out Elements, out this.VertexSizeInBytes);
             this.Layout = new InputLayout(Device, VertexShaderSignature, Elements);
         }
     }

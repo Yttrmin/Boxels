@@ -30,10 +30,11 @@ namespace BoxelLib
 
         public void OnMessagePump()
         {
-            var DeltaTime = ((double)GameTimer.ElapsedTicks/Stopwatch.Frequency)*1000;
+            var DeltaTime = ((double)GameTimer.ElapsedTicks / (double)Stopwatch.Frequency);
+            GameTimer.Restart();
+            //DeltaTime = (double) 1/60;
             if (this.ToTick != null)
                 this.ToTick(DeltaTime);
-            GameTimer.Restart();
         }
     }
 }

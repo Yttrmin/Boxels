@@ -1,25 +1,33 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using BoxelCommon;
 using BoxelLib;
 using BoxelRenderer;
+using SharpDX;
 using SharpDX.Windows;
 
 namespace ProjectBoxelGame
 {
     sealed class Game : GameBase, ITickable
     {
-        private BoxelManager Manager;
-        private RenderForm Window;
-        private RenderDevice RenderDevice;
+        private readonly BoxelManager Manager;
+        private readonly RenderForm Window;
+        private readonly RenderDevice RenderDevice;
+        private readonly ICamera Camera;
 
         public Game(VBL.vbl Level)
         {
             this.RegisterTick(this);
+            this.Camera = new BasicCamera(new Vector3(0, 2, 0), new Vector3(1, 0, 0));
             this.Window = new RenderForm("Project Boxel (Open PV Editor)");
+            this.Window.FormBorderStyle = FormBorderStyle.Fixed3D;
+            this.Window.MaximizeBox = false;
+            this.RenderDevice = new RenderDevice(this.Window);
             this.Manager = new BoxelManager(new BoxelManager.BoxelManagerSettings()
                 {
                     Width = Level.properties.width,
@@ -28,13 +36,17 @@ namespace ProjectBoxelGame
                 }, RenderDevice);
             foreach (var Voxel in Level.voxels)
             {
-                
+                this.Manager.Add(new BasicBoxel(new Int3(Voxel.x, Voxel.y, Voxel.z), 1.0f), 
+                    new Int3(Voxel.x, Voxel.y, Voxel.z));
             }
+            this.Window.Show();
         }
 
         public void Tick(double DeltaTime)
         {
-            
+            //Trace.WriteLine(String.Format("DT: {0}", DeltaTime));
+            this.Camera.Tick(DeltaTime);
+            this.Manager.Render(this.Camera);
         }
 
         /// <summary>

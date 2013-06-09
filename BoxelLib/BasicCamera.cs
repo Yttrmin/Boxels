@@ -16,7 +16,6 @@ namespace BoxelLib
         {
             get
             {
-                Position = new Vector3(Position.X + 0.01f, Position.Y, Position.Z + 0.01f);
                 return Matrix.LookAtLH(Position, new Vector3(1000000, 0, 0), new Vector3(0, 1, 0));
             }
         }
@@ -26,6 +25,11 @@ namespace BoxelLib
             this.Position = Position;
             this.LookDirection = LookDirection;
             this.Projection = Matrix.PerspectiveFovLH((float)(90.0f * (Math.PI / 180.0f)), 1.333333f, 1.0f, 500.0f);
+        }
+
+        public void Tick(double DeltaTime)
+        {
+            Position = new Vector3((float) (this.Position.X + (0.5*DeltaTime)), Position.Y, (float) (this.Position.Z + (0.5*DeltaTime)));
         }
 
         private Matrix CalculateViewMatrix()

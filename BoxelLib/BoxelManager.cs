@@ -28,6 +28,7 @@ namespace BoxelLib
         private readonly IBoxelContainer Boxels;
         private readonly IBoxelRenderer Renderer;
         private readonly RenderDevice RenderDevice;
+        [Obsolete("There won't be JUST boxels so this should be somewhere else. Need a more general rendering manager.")]
         private readonly Buffer PerFrameData;
         /// <summary>
         /// Minimum number of boxels to draw from camera in all directions.
@@ -46,12 +47,15 @@ namespace BoxelLib
             this.Settings = Settings;
             var LargestSide = Math.Max(Math.Max(Settings.Width, Settings.Height), Settings.Length);
             this.Boxels = new ConstantRandomContainer();
-            this.Renderer = new PointRenderer(RenderDevice.D3DDevice);
+            bool PointRendering = Environment.GetCommandLineArgs().Any(Arg => Arg == "point");
+            this.Renderer = PointRendering ? (IBoxelRenderer) new PointRenderer(RenderDevice.D3DDevice) : new CubeRenderer(RenderDevice.D3DDevice);
             this.DrawDistance = 32;
             this.RenderDevice = RenderDevice;
             this.PerFrameData = new Buffer(RenderDevice.D3DDevice, Matrix.SizeInBytes, ResourceUsage.Dynamic,
                                            BindFlags.ConstantBuffer, CpuAccessFlags.Write, ResourceOptionFlags.None, 0);
             this.RenderDevice.D3DDevice.ImmediateContext1.VertexShader.SetConstantBuffer(0, this.PerFrameData);
+            this.RenderDevice.D3DDevice.ImmediateContext1.GeometryShader.SetConstantBuffer(0, this.PerFrameData);
+            this.RenderDevice.D3DDevice.ImmediateContext1.PixelShader.SetConstantBuffer(0, this.PerFrameData);
         }
 
         public void Add(IBoxel Boxel, Int3 Position)
