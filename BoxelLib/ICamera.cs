@@ -7,9 +7,11 @@ using SharpDX;
 
 namespace BoxelLib
 {
-    public interface ILocalPlayer
+    public interface ICamera
     {
+        Matrix Projection { get; }
+        Matrix View { get; }
         Vector3 Position { get; }
-        ICamera Camera { get; }
+        Vector3 LookDirection { get; }
     }
 }

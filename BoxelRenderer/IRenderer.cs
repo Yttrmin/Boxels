@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using BoxelLib;
 using SharpDX.Direct3D11;
+using Device1 = SharpDX.Direct3D11.Device1;
 
 namespace BoxelRenderer
 {

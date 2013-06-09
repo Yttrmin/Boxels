@@ -3,13 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using SharpDX;
 
-namespace BoxelLib
+namespace BoxelRenderer
 {
-    public interface ILocalPlayer
+    public class CubeRenderer
     {
-        Vector3 Position { get; }
-        ICamera Camera { get; }
     }
 }

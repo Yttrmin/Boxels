@@ -3,13 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using SharpDX;
 
-namespace BoxelLib
+namespace BoxelCommon
 {
-    public interface ILocalPlayer
+    public interface ITickable
     {
-        Vector3 Position { get; }
-        ICamera Camera { get; }
+        void Tick(double DeltaTime);
     }
 }

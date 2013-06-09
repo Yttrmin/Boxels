@@ -15,7 +15,7 @@ using Device1 = SharpDX.Direct3D11.Device1;
 
 namespace BoxelRenderer
 {
-    public class BoxelPointRenderer : IBoxelRenderer
+    public sealed class PointRenderer : IBoxelRenderer
     {
         private Buffer VertexBuffer;
         private VertexBufferBinding VertexBufferView;
@@ -26,7 +26,7 @@ namespace BoxelRenderer
         private int BoxelCount;
         public int ViewHash { get; private set; }
 
-        public BoxelPointRenderer(Device1 Device)
+        public PointRenderer(Device1 Device)
         {
             this.CompileShaders(Device);
         }

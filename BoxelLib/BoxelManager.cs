@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BoxelCommon;
 using BoxelRenderer;
 using SharpDX;
 using SharpDX.Direct3D11;
@@ -45,7 +46,7 @@ namespace BoxelLib
             this.Settings = Settings;
             var LargestSide = Math.Max(Math.Max(Settings.Width, Settings.Height), Settings.Length);
             this.Boxels = new ConstantRandomContainer();
-            this.Renderer = new BoxelPointRenderer(RenderDevice.D3DDevice);
+            this.Renderer = new PointRenderer(RenderDevice.D3DDevice);
             this.DrawDistance = 32;
             this.RenderDevice = RenderDevice;
             this.PerFrameData = new Buffer(RenderDevice.D3DDevice, Matrix.SizeInBytes, ResourceUsage.Dynamic,

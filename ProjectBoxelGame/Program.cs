@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Serialization;
+using BoxelCommon;
 using BoxelLib;
 using System;
 using BoxelRenderer;
