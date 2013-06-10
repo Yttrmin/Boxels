@@ -22,7 +22,7 @@ namespace BoxelRenderer
         private VertexBufferBinding VertexBufferBinding;
         private PrimitiveTopology Topology;
         private int VertexSizeInBytes;
-        private int BoxelCount;
+        private int VertexCount;
 
         protected BaseRenderer(string ShaderFileName, string VertexEntryName, string GeometryEntryName,
                                     string PixelEntryName, PrimitiveTopology Topology, Device1 Device)
@@ -34,8 +34,7 @@ namespace BoxelRenderer
         public void SetView(IEnumerable<IBoxel> Boxels, int SphereHash, Device1 Device)
         {
             Debug.Assert(SphereHash != this.ViewHash);
-            this.GenerateVertexBuffer(Boxels, Device, out VertexBuffer, out VertexBufferBinding, this.VertexSizeInBytes);
-            this.BoxelCount = Boxels.Count();
+            this.GenerateVertexBuffer(Boxels, Device, out this.VertexBuffer, out this.VertexBufferBinding, out this.VertexCount, this.VertexSizeInBytes);
             this.ViewHash = SphereHash;
         }
 
@@ -48,7 +47,7 @@ namespace BoxelRenderer
             Context.GeometryShader.Set(this.GeometryShader);
             Context.PixelShader.Set(this.PixelShader);
             this.PreRender(Context);
-            Context.Draw(this.BoxelCount, 0);
+            Context.Draw(this.VertexCount, 0);
         }
 
         /// <summary>
@@ -61,8 +60,8 @@ namespace BoxelRenderer
         /// <param name="Context"></param>
         protected abstract void PreRender(DeviceContext1 Context);
 
-        protected abstract void GenerateVertexBuffer(IEnumerable<IBoxel> Boxels, Device1 Device,
-            out Buffer VertexBuffer, out VertexBufferBinding Binding, int VertexSizeInBytes);
+        protected abstract void GenerateVertexBuffer(IEnumerable<IBoxel> Boxels, Device1 Device, out Buffer VertexBuffer, 
+            out VertexBufferBinding Binding, out int VertexCount1, int VertexSizeInBytes);
 
         protected abstract void SetupInputElements(out InputElement[] Elements, out int VertexSizeInBytes);
 

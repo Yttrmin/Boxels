@@ -22,17 +22,6 @@ namespace VBL
     public partial class vbl
     {
 
-        private vblImport[] importField;
-
-        private vblResource[] resourcesField;
-
-        private vblProperties propertiesField;
-
-        private vblVoxel[] voxelsField;
-
-        private vblEntity[] entitiesField;
-
-        private vblProp[] propsField;
 
         [System.Xml.Serialization.XmlElementAttribute(Form = System.Xml.Schema.XmlSchemaForm.Unqualified)]
         public string cameras { get; set; }
@@ -183,8 +172,7 @@ namespace VBL
     public partial class NewDataSet
     {
 
-        private vbl[] itemsField;
-
+        
         [System.Xml.Serialization.XmlElementAttribute("vbl")]
         public vbl[] Items { get; set; }
     }

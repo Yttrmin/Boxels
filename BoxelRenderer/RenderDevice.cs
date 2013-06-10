@@ -33,7 +33,7 @@ namespace BoxelRenderer
             this.FPSWatch.Start();
             this.D3DDevice.ImmediateContext1.Rasterizer.State = new RasterizerState1(this.D3DDevice, new RasterizerStateDescription1()
                 {
-                    CullMode = CullMode.None,
+                    CullMode = CullMode.Back,
                     FillMode = FillMode.Solid
                 });
         }
@@ -92,15 +92,20 @@ namespace BoxelRenderer
 #endif
             this.D3DDevice = new SharpDX.Direct3D11.Device(this.Adapter, Flags)
                 .QueryInterface<SharpDX.Direct3D11.Device1>();
+            this.D3DDevice.DebugName = "D3DDevice";
             this.ImmediateContext = this.D3DDevice.ImmediateContext1;
+            this.ImmediateContext.DebugName = "ImmediateContext";
             Trace.WriteLine(String.Format("Success. Feature Level: {0}", this.D3DDevice.FeatureLevel));
             Console.ForegroundColor = OldColor;
             Trace.WriteLine("Creating DXGI1.2 Device...");
             this.DXGIDevice = this.D3DDevice.QueryInterface<Device2>();
             Trace.WriteLine("Success... Creating DXGI1.1 SwapChain...");
             this.SwapChain = this.Factory.CreateSwapChainForHwnd(this.DXGIDevice, Window.Handle, ref SwapDesc, null, null);
+            this.SwapChain.DebugName = "SwapChain";
             var BackBufferTexture = this.SwapChain.GetBackBuffer<Texture2D>(0);
             this.BackBuffer = new RenderTargetView(this.D3DDevice, BackBufferTexture);
+            this.BackBuffer.DebugName = "BackBufferRTV";
+            this.ImmediateContext.OutputMerger.SetTargets(this.BackBuffer);
             Trace.WriteLine("Success.");
             //Trace.WriteLine(this.GetFeaturesString());
             this.InitializeViewport();

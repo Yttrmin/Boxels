@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -47,8 +48,32 @@ namespace BoxelLib
             this.Settings = Settings;
             var LargestSide = Math.Max(Math.Max(Settings.Width, Settings.Height), Settings.Length);
             this.Boxels = new ConstantRandomContainer();
-            bool PointRendering = Environment.GetCommandLineArgs().Any(Arg => Arg == "point");
-            this.Renderer = PointRendering ? (IBoxelRenderer) new PointRenderer(RenderDevice.D3DDevice) : new CubeRenderer(RenderDevice.D3DDevice);
+            foreach (var Arg in Environment.GetCommandLineArgs())
+            {
+                if (Arg == "point")
+                {
+                    Trace.WriteLine("Using PointRenderer.");
+                    this.Renderer = new PointRenderer(RenderDevice.D3DDevice);
+                    break;
+                }
+                else if (Arg == "cube")
+                {
+                    Trace.WriteLine("Using CubeRenderer.");
+                    this.Renderer = new CubeRenderer(RenderDevice.D3DDevice);
+                    break;
+                }
+                else if (Arg == "cubenogs")
+                {
+                    Trace.WriteLine("Using CubeNoGSRenderer.");
+                    this.Renderer = new CubeNoGSRenderer(RenderDevice.D3DDevice);
+                    break;
+                }
+            }
+            if (this.Renderer == null)
+            {
+                Trace.WriteLine("Using CubeNoGSRenderer by default.");
+                this.Renderer = new CubeNoGSRenderer(RenderDevice.D3DDevice);
+            }
             this.DrawDistance = 32;
             this.RenderDevice = RenderDevice;
             this.PerFrameData = new Buffer(RenderDevice.D3DDevice, Matrix.SizeInBytes, ResourceUsage.Dynamic,
@@ -77,6 +102,11 @@ namespace BoxelLib
             {
                 this.Renderer.SetView(this.Boxels.BoxelsInRadius(CenterChunk, this.DrawDistance), 
                     Hash, this.RenderDevice.D3DDevice);
+                Trace.WriteLine("!Forcing Garbage Collection!!REMOVE ME!");
+                GC.Collect(3, GCCollectionMode.Forced, true);
+                GC.WaitForPendingFinalizers();
+                GC.Collect(3, GCCollectionMode.Forced, true);
+                Trace.WriteLine("!Forcing Garbage Collection Complete!!REMOVE ME!");
             }
             this.UpdatePerFrameData(RenderCamera);
             this.Renderer.Render(this.RenderDevice.D3DDevice.ImmediateContext1);

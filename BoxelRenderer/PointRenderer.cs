@@ -18,9 +18,10 @@ namespace BoxelRenderer
 
         }
 
-        protected override void GenerateVertexBuffer(IEnumerable<IBoxel> Boxels, Device1 Device,
-            out Buffer VertexBuffer, out VertexBufferBinding Binding, int VertexSizeInBytes)
+        protected override void GenerateVertexBuffer(IEnumerable<IBoxel> Boxels, Device1 Device, out Buffer VertexBuffer, 
+            out VertexBufferBinding Binding, out int VertexCount, int VertexSizeInBytes)
         {
+            VertexCount = Boxels.Count();
             using (var VertexStream = new DataStream(Boxels.Count() * VertexSizeInBytes, false, true))
             {
                 foreach (var Boxel in Boxels)

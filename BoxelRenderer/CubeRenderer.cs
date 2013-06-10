@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BoxelLib;
 using SharpDX;
 using SharpDX.DXGI;
 using SharpDX.Direct3D;
@@ -16,6 +17,8 @@ namespace BoxelRenderer
     {
         private const int BoxelSize = 16;
         private readonly Buffer CubeConstantData;
+        private Texture2D BoxelTexture;
+        private ShaderResourceView BoxelTextureView;
 
         public CubeRenderer(Device1 Device)
             : base("BRShaders.hlsl", "VShader", "GShader", "PShader", PrimitiveTopology.PointList, Device)
@@ -23,9 +26,10 @@ namespace BoxelRenderer
             this.CubeConstantData = this.InitializeCubeData(Device);
         }
 
-        protected override void GenerateVertexBuffer(IEnumerable<BoxelLib.IBoxel> Boxels, 
-            Device1 Device, out Buffer VertexBuffer, out VertexBufferBinding Binding, int VertexSizeInBytes)
+        protected override void GenerateVertexBuffer(IEnumerable<IBoxel> Boxels, Device1 Device, out Buffer VertexBuffer, 
+            out VertexBufferBinding Binding, out int VertexCount, int VertexSizeInBytes)
         {
+            VertexCount = Boxels.Count();
             using (var VertexStream = new DataStream(Boxels.Count() * VertexSizeInBytes, false, true))
             {
                 foreach (var Boxel in Boxels)
@@ -35,6 +39,7 @@ namespace BoxelRenderer
                 }
                 VertexBuffer = new Buffer(Device, VertexStream, (int)VertexStream.Length, ResourceUsage.Immutable,
                                                BindFlags.VertexBuffer, CpuAccessFlags.None, ResourceOptionFlags.None, 0);
+                VertexBuffer.DebugName = "BoxelsVertexBuffer";
                 Binding = new VertexBufferBinding(VertexBuffer, 12, 0);
             }
         }
@@ -85,7 +90,7 @@ namespace BoxelRenderer
 
                 CubeBuffer = new Buffer(Device, CubeConstantsStream, Vector4.SizeInBytes * (14) + Vector4.SizeInBytes * 4
                 , ResourceUsage.Immutable, BindFlags.ConstantBuffer, CpuAccessFlags.None, ResourceOptionFlags.None, 0);
-                CubeBuffer.DebugName = "VoxelBuffer";
+                CubeBuffer.DebugName = "CubeDataConstantBuffer";
             }
             return CubeBuffer;
         }
