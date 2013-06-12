@@ -31,6 +31,7 @@ namespace BoxelLib
         private readonly RenderDevice RenderDevice;
         [Obsolete("There won't be JUST boxels so this should be somewhere else. Need a more general rendering manager.")]
         private readonly Buffer PerFrameData;
+        private const bool Benchmark = false;
         /// <summary>
         /// Minimum number of boxels to draw from camera in all directions.
         /// </summary>
@@ -67,6 +68,11 @@ namespace BoxelLib
                     Trace.WriteLine("Using CubeNoGSRenderer.");
                     this.Renderer = new CubeNoGSRenderer(RenderDevice.D3DDevice);
                     break;
+                }
+                else if (Arg == "cubeii")
+                {
+                    Trace.WriteLine("Using CubeIIR");
+                    this.Renderer = new CubeIndexedInstancedRegister(RenderDevice.D3DDevice);
                 }
             }
             if (this.Renderer == null)
@@ -111,6 +117,15 @@ namespace BoxelLib
             this.UpdatePerFrameData(RenderCamera);
             this.Renderer.Render(this.RenderDevice.D3DDevice.ImmediateContext1);
             this.RenderDevice.Render();
+        }
+
+        private void SetupRenderer(BaseRenderer NewRenderer)
+        {
+            if (this.Renderer != null)
+            {
+                throw new NotImplementedException();
+            }
+            //this.Renderer = NewRenderer;
         }
 
         private void UpdatePerFrameData(ICamera RenderCamera)

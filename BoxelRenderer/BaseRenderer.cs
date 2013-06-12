@@ -5,9 +5,11 @@ using System.Text;
 using System.Threading.Tasks;
 using BoxelLib;
 using SharpDX.D3DCompiler;
+using SharpDX.DXGI;
 using SharpDX.Direct3D;
 using SharpDX.Direct3D11;
 using Buffer = SharpDX.Direct3D11.Buffer;
+using Device1 = SharpDX.Direct3D11.Device1;
 
 namespace BoxelRenderer
 {
@@ -19,10 +21,12 @@ namespace BoxelRenderer
         private GeometryShader GeometryShader;
         private PixelShader PixelShader;
         private Buffer VertexBuffer;
-        private VertexBufferBinding VertexBufferBinding;
+        private Buffer IndexBuffer;
+        private Buffer InstanceBuffer;
+        private VertexBufferBinding VertexBufferBinding, InstanceBufferBinding;
         private PrimitiveTopology Topology;
         private int VertexSizeInBytes;
-        private int VertexCount;
+        private int VertexCount, InstanceCount;
 
         protected BaseRenderer(string ShaderFileName, string VertexEntryName, string GeometryEntryName,
                                     string PixelEntryName, PrimitiveTopology Topology, Device1 Device)
@@ -34,7 +38,9 @@ namespace BoxelRenderer
         public void SetView(IEnumerable<IBoxel> Boxels, int SphereHash, Device1 Device)
         {
             Debug.Assert(SphereHash != this.ViewHash);
-            this.GenerateVertexBuffer(Boxels, Device, out this.VertexBuffer, out this.VertexBufferBinding, out this.VertexCount, this.VertexSizeInBytes);
+            this.GenerateBuffers(Boxels, Device, out this.VertexBuffer, out this.VertexBufferBinding, 
+                out this.VertexCount, out this.IndexBuffer, out this.InstanceBuffer,
+                out this.InstanceBufferBinding, out this.InstanceCount, this.VertexSizeInBytes);
             this.ViewHash = SphereHash;
         }
 
@@ -43,11 +49,28 @@ namespace BoxelRenderer
             Context.InputAssembler.InputLayout = this.Layout;
             Context.InputAssembler.PrimitiveTopology = this.Topology;
             Context.InputAssembler.SetVertexBuffers(0, this.VertexBufferBinding);
+            if(this.InstanceBuffer != null)
+                Context.InputAssembler.SetVertexBuffers(1, this.InstanceBufferBinding);
+            Context.InputAssembler.SetIndexBuffer(this.IndexBuffer, Format.R32_UInt, 0);
             Context.VertexShader.Set(this.VertexShader);
             Context.GeometryShader.Set(this.GeometryShader);
             Context.PixelShader.Set(this.PixelShader);
             this.PreRender(Context);
-            Context.Draw(this.VertexCount, 0);
+            if(this.InstanceBuffer != null)
+                Context.DrawIndexedInstanced(36, this.InstanceCount, 0, 0, 0);
+            else
+                Context.Draw(this.VertexCount, 0);
+        }
+
+        public void Dispose()
+        {
+            this.Layout.Dispose();
+            this.VertexShader.Dispose();
+            this.GeometryShader.Dispose();
+            this.PixelShader.Dispose();
+            this.VertexBuffer.Dispose();
+            this.IndexBuffer.Dispose();
+            this.InstanceBuffer.Dispose();
         }
 
         /// <summary>
@@ -60,8 +83,9 @@ namespace BoxelRenderer
         /// <param name="Context"></param>
         protected abstract void PreRender(DeviceContext1 Context);
 
-        protected abstract void GenerateVertexBuffer(IEnumerable<IBoxel> Boxels, Device1 Device, out Buffer VertexBuffer, 
-            out VertexBufferBinding Binding, out int VertexCount1, int VertexSizeInBytes);
+        protected abstract void GenerateBuffers(IEnumerable<IBoxel> Boxels, Device1 Device, out Buffer VertexBuffer,
+            out VertexBufferBinding Binding, out int VertexCount2, out Buffer IndexBuffer, out Buffer InstanceBuffer,
+            out VertexBufferBinding InstanceBinding, out int InstanceCount, int VertexSizeInBytes);
 
         protected abstract void SetupInputElements(out InputElement[] Elements, out int VertexSizeInBytes);
 
@@ -78,6 +102,7 @@ namespace BoxelRenderer
             {
                 VertexShaderSignature = new ShaderSignature(Result.Bytecode);
                 this.VertexShader = new VertexShader(Device, Result.Bytecode);
+                this.VertexShader.DebugName = ShaderFileName + "::" + VertexEntryName;
             }
 
             if (!string.IsNullOrEmpty(GeometryEntryName))
@@ -87,6 +112,7 @@ namespace BoxelRenderer
                                                                 ShaderFlags.WarningsAreErrors | ShaderFlags.OptimizationLevel3))
                 {
                     this.GeometryShader = new GeometryShader(Device, Result.Bytecode);
+                    this.GeometryShader.DebugName = ShaderFileName + "::" + GeometryEntryName;
                 }
             }
 
@@ -95,6 +121,7 @@ namespace BoxelRenderer
                                                               ShaderFlags.WarningsAreErrors | ShaderFlags.OptimizationLevel3))
             {
                 this.PixelShader = new PixelShader(Device, Result.Bytecode);
+                this.PixelShader.DebugName = ShaderFileName + "::" + PixelEntryName;
             }
             Trace.WriteLine("Done. Setting up InputLayout...");
             this.InitializeLayout(Device, VertexShaderSignature);
@@ -107,5 +134,6 @@ namespace BoxelRenderer
             this.SetupInputElements(out Elements, out this.VertexSizeInBytes);
             this.Layout = new InputLayout(Device, VertexShaderSignature, Elements);
         }
+
     }
 }

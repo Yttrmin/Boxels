@@ -26,9 +26,14 @@ namespace BoxelRenderer
             this.CubeConstantData = this.InitializeCubeData(Device);
         }
 
-        protected override void GenerateVertexBuffer(IEnumerable<IBoxel> Boxels, Device1 Device, out Buffer VertexBuffer, 
-            out VertexBufferBinding Binding, out int VertexCount, int VertexSizeInBytes)
+        protected override void GenerateBuffers(IEnumerable<IBoxel> Boxels, Device1 Device, out Buffer VertexBuffer,
+            out VertexBufferBinding Binding, out int VertexCount, out Buffer IndexBuffer, out Buffer InstanceBuffer,
+            out VertexBufferBinding InstanceBinding, out int InstanceCount, int VertexSizeInBytes)
         {
+            IndexBuffer = null;
+            InstanceBuffer = null;
+            InstanceCount = 0;
+            InstanceBinding = new VertexBufferBinding();
             VertexCount = Boxels.Count();
             using (var VertexStream = new DataStream(Boxels.Count() * VertexSizeInBytes, false, true))
             {
