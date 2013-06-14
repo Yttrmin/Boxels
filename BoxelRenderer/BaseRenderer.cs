@@ -56,9 +56,11 @@ namespace BoxelRenderer
             Context.GeometryShader.Set(this.GeometryShader);
             Context.PixelShader.Set(this.PixelShader);
             this.PreRender(Context);
-            if(this.InstanceBuffer != null)
+            if(this.InstanceBuffer != null && this.IndexBuffer != null)
                 Context.DrawIndexedInstanced(36, this.InstanceCount, 0, 0, 0);
-            else
+            else if(this.InstanceBuffer != null || this.InstanceCount > 0)
+                Context.DrawInstanced(this.VertexCount, this.InstanceCount, 0, 0);
+            else if(this.VertexBuffer != null)
                 Context.Draw(this.VertexCount, 0);
         }
 
@@ -84,7 +86,7 @@ namespace BoxelRenderer
         protected abstract void PreRender(DeviceContext1 Context);
 
         protected abstract void GenerateBuffers(IEnumerable<IBoxel> Boxels, Device1 Device, out Buffer VertexBuffer,
-            out VertexBufferBinding Binding, out int VertexCount2, out Buffer IndexBuffer, out Buffer InstanceBuffer,
+            out VertexBufferBinding Binding, out int VertexCount, out Buffer IndexBuffer, out Buffer InstanceBuffer,
             out VertexBufferBinding InstanceBinding, out int InstanceCount, int VertexSizeInBytes);
 
         protected abstract void SetupInputElements(out InputElement[] Elements, out int VertexSizeInBytes);
