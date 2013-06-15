@@ -19,6 +19,7 @@ namespace BoxelRenderer
         private Device2 DXGIDevice;
         private SwapChain1 SwapChain;
         private RenderTargetView BackBuffer;
+        private DepthStencilView DepthBuffer;
         private ViewportF Viewport;
         private bool PlatformUpdate;
         private Stopwatch FPSWatch;
@@ -51,7 +52,8 @@ namespace BoxelRenderer
             }
             this.SwapChain.Present(0, PresentFlags.None);
             this.ImmediateContext.ClearRenderTargetView(this.BackBuffer, Color.Black);
-            this.ImmediateContext.OutputMerger.SetTargets(this.BackBuffer);
+            this.ImmediateContext.ClearDepthStencilView(this.DepthBuffer, DepthStencilClearFlags.Depth, 1, 0);
+            this.ImmediateContext.OutputMerger.SetTargets(this.DepthBuffer, this.BackBuffer);
         }
 
         private void InitializeDirect3D(RenderForm Window)
@@ -109,6 +111,7 @@ namespace BoxelRenderer
             Trace.WriteLine("Success.");
             //Trace.WriteLine(this.GetFeaturesString());
             this.InitializeViewport();
+            this.InitializeDepthBuffer(BackBufferTexture.Description.Width, BackBufferTexture.Description.Height);
             Trace.WriteLine("-------------------End D3D11.1------------------------------");
         }
 
@@ -117,6 +120,21 @@ namespace BoxelRenderer
             this.Viewport = new Viewport(0, 0, this.SwapChain.Description1.Width,
                 this.SwapChain.Description1.Height, 0, 1);
             this.ImmediateContext.Rasterizer.SetViewports(this.Viewport);
+        }
+
+        private void InitializeDepthBuffer(int Width, int Height)
+        {
+            var DepthBufferTexture = new Texture2D(this.D3DDevice, new Texture2DDescription()
+                {
+                    Width = Width,
+                    Height = Height,
+                    ArraySize = 1,
+                    MipLevels = 1,
+                    SampleDescription = new SampleDescription(1,0),
+                    Format = Format.D24_UNorm_S8_UInt,
+                    BindFlags = BindFlags.DepthStencil,
+                });
+            this.DepthBuffer = new DepthStencilView(this.D3DDevice, DepthBufferTexture);
         }
 
         private string GetFeaturesString()

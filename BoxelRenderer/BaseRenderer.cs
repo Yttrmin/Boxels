@@ -10,6 +10,7 @@ using SharpDX.Direct3D;
 using SharpDX.Direct3D11;
 using Buffer = SharpDX.Direct3D11.Buffer;
 using Device1 = SharpDX.Direct3D11.Device1;
+using CommonDX;
 
 namespace BoxelRenderer
 {
@@ -27,12 +28,16 @@ namespace BoxelRenderer
         private PrimitiveTopology Topology;
         private int VertexSizeInBytes;
         private int VertexCount, InstanceCount;
+        private ShaderResourceView Texture;
 
         protected BaseRenderer(string ShaderFileName, string VertexEntryName, string GeometryEntryName,
                                     string PixelEntryName, PrimitiveTopology Topology, Device1 Device)
         {
             this.Topology = Topology;
             this.CompileShaders(Device, ShaderFileName, VertexEntryName, GeometryEntryName, PixelEntryName);
+            this.Texture = new ShaderResourceView(Device, 
+                TextureLoader.CreateTexture2DFromBitmap(Device, 
+                TextureLoader.LoadBitmap(new SharpDX.WIC.ImagingFactory2(), "LinearBoxels.png")));
         }
 
         public void SetView(IEnumerable<IBoxel> Boxels, int SphereHash, Device1 Device)
@@ -55,6 +60,7 @@ namespace BoxelRenderer
             Context.VertexShader.Set(this.VertexShader);
             Context.GeometryShader.Set(this.GeometryShader);
             Context.PixelShader.Set(this.PixelShader);
+            Context.PixelShader.SetShaderResource(0, this.Texture);
             this.PreRender(Context);
             if(this.InstanceBuffer != null && this.IndexBuffer != null)
                 Context.DrawIndexedInstanced(36, this.InstanceCount, 0, 0, 0);

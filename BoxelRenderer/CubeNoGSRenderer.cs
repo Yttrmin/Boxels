@@ -24,7 +24,7 @@ namespace BoxelRenderer
         private const int EmittedVertices = 36;
 
         public CubeNoGSRenderer(Device1 Device)
-            : base("PRShaders.hlsl", "VShader", null, "PShader", PrimitiveTopology.TriangleList, Device)
+            : base("PRShaders.hlsl", "VShaderTextured", null, "PShaderTextured", PrimitiveTopology.TriangleList, Device)
         {
             
         }
@@ -43,28 +43,26 @@ namespace BoxelRenderer
             IndexBuffer = null;
             InstanceCount = 0;
             var Enumerable = Boxels as IBoxel[] ?? Boxels.ToArray();
+            var Random = new Random();
             VertexCount = Enumerable.Length * EmittedVertices;
-            using (var VertexStream = new DataStream(Enumerable.Length * (Cube.NonIndexedVertexCount*Vector3.SizeInBytes), false, true))
+            using (var VertexStream = new DataStream(Enumerable.Length * 
+                (Cube.NonIndexedVertexCount*Vector3.SizeInBytes + Cube.NonIndexedVertexCount*Vector2.SizeInBytes), false, true))
             {
                 foreach (var Boxel in Enumerable)
                 {
                     new Cube(new Vector3(Boxel.Position.X * BoxelSize,
-                        Boxel.Position.Y * BoxelSize, Boxel.Position.Z * BoxelSize), BoxelSize).WriteNonIndexed(VertexStream);
+                        Boxel.Position.Y * BoxelSize, Boxel.Position.Z * BoxelSize), BoxelSize, Random.Next(0, 7), 8).WriteNonIndexedWithUVs(VertexStream);
                 }
                 VertexBuffer = new Buffer(Device, VertexStream, (int)VertexStream.Length, ResourceUsage.Immutable,
                                                BindFlags.VertexBuffer, CpuAccessFlags.None, ResourceOptionFlags.None, 0);
                 VertexBuffer.DebugName = "BoxelsVertexBuffer";
-                Binding = new VertexBufferBinding(VertexBuffer, 12, 0);
+                Binding = new VertexBufferBinding(VertexBuffer, Vector3.SizeInBytes+Vector2.SizeInBytes, 0);
             }
         }
 
         protected override void SetupInputElements(out InputElement[] Elements, out int VertexSizeInBytes)
         {
-            Elements = new[]
-                {
-                    new InputElement("POSITION", 0, Format.R32G32B32_Float, 0, 0, InputClassification.PerVertexData, 0),
-                };
-            VertexSizeInBytes = Vector3.SizeInBytes;
+            RendererHelpers.InputLayout.PositionTexcoord(out Elements, out VertexSizeInBytes);
         }
     }
 }

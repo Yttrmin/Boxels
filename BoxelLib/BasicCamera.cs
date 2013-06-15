@@ -16,7 +16,7 @@ namespace BoxelLib
         {
             get
             {
-                return Matrix.LookAtLH(Position, new Vector3(1000000, 0, 0), new Vector3(0, 1, 0));
+                return Matrix.LookAtLH(Position, new Vector3(2000, 0, 10000), new Vector3(0, 1, 0));
             }
         }
 

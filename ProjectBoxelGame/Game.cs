@@ -10,6 +10,7 @@ using BoxelLib;
 using BoxelRenderer;
 using SharpDX;
 using SharpDX.Windows;
+using System.Drawing;
 
 namespace ProjectBoxelGame
 {
@@ -27,6 +28,7 @@ namespace ProjectBoxelGame
             this.Window = new RenderForm("Project Boxel (Open PV Editor)");
             this.Window.FormBorderStyle = FormBorderStyle.Fixed3D;
             this.Window.MaximizeBox = false;
+            this.Window.ClientSize = new System.Drawing.Size(640, 480);
             this.RenderDevice = new RenderDevice(this.Window);
             this.Manager = new BoxelManager(new BoxelManager.BoxelManagerSettings()
                 {
