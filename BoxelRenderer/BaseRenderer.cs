@@ -29,6 +29,7 @@ namespace BoxelRenderer
         private int VertexSizeInBytes;
         private int VertexCount, InstanceCount;
         private ShaderResourceView Texture;
+        private SamplerState TextureSampler;
 
         protected BaseRenderer(string ShaderFileName, string VertexEntryName, string GeometryEntryName,
                                     string PixelEntryName, PrimitiveTopology Topology, Device1 Device)
@@ -38,6 +39,19 @@ namespace BoxelRenderer
             this.Texture = new ShaderResourceView(Device, 
                 TextureLoader.CreateTexture2DFromBitmap(Device, 
                 TextureLoader.LoadBitmap(new SharpDX.WIC.ImagingFactory2(), "LinearBoxels.png")));
+            this.TextureSampler = new SamplerState(Device, new SamplerStateDescription()
+            {
+                Filter = Filter.MinMagMipLinear,
+                AddressU = TextureAddressMode.Border,
+                AddressV = TextureAddressMode.Border,
+                AddressW = TextureAddressMode.Border,
+                BorderColor = SharpDX.Color.HotPink,
+                MinimumLod = float.MinValue,
+                MaximumLod = float.MaxValue,
+                ComparisonFunction = Comparison.Never,
+                MaximumAnisotropy = 1,
+                MipLodBias = 0
+            });
         }
 
         public void SetView(IEnumerable<IBoxel> Boxels, int SphereHash, Device1 Device)
@@ -61,6 +75,7 @@ namespace BoxelRenderer
             Context.GeometryShader.Set(this.GeometryShader);
             Context.PixelShader.Set(this.PixelShader);
             Context.PixelShader.SetShaderResource(0, this.Texture);
+            Context.PixelShader.SetSampler(0, this.TextureSampler);
             this.PreRender(Context);
             if(this.InstanceBuffer != null && this.IndexBuffer != null)
                 Context.DrawIndexedInstanced(36, this.InstanceCount, 0, 0, 0);

@@ -16,9 +16,13 @@ namespace BoxelLib
     {
         public struct BoxelManagerSettings
         {
+            [Obsolete]
             public int Length;
+            [Obsolete]
             public int Width;
+            [Obsolete]
             public int Height;
+            [Obsolete]
             public bool UseChunks;
             public int ChunkLength;
             public int ChunkWidth;
@@ -72,7 +76,7 @@ namespace BoxelLib
                 else if (Arg == "cubeii")
                 {
                     Trace.WriteLine("Using CubeIIR");
-                    this.Renderer = new CubeIndexedInstancedRegister(RenderDevice.D3DDevice);
+                    this.Renderer = new CubeIndexedInstancedRenderer(RenderDevice.D3DDevice);
                 }
             }
             if (this.Renderer == null)

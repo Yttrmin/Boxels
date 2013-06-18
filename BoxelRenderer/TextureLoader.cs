@@ -1,4 +1,7 @@
-﻿// Copyright (c) 2010-2013 SharpDX - Alexandre Mutel
+﻿using SharpDX;
+using SharpDX.Direct3D11;
+using SharpDX.WIC;
+// Copyright (c) 2010-2013 SharpDX - Alexandre Mutel
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -22,9 +25,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using SharpDX.WIC;
+using System.IO;
 
 namespace CommonDX
 {
+    [Obsolete]
     public class TextureLoader
     {
         /// <summary>
@@ -81,6 +87,27 @@ namespace CommonDX
                     OptionFlags = SharpDX.Direct3D11.ResourceOptionFlags.None,
                     SampleDescription = new SharpDX.DXGI.SampleDescription(1, 0),
                 }, new SharpDX.DataRectangle(buffer.DataPointer, stride));
+            }
+        }
+
+        public static void WriteD2DBitmapToFile(string FileName, SharpDX.Direct2D1.Bitmap1 Bitmap, ImagingFactory2 Factory, SharpDX.Direct2D1.Device D2DDevice)
+        {
+            var bitmapEncoder = new BitmapEncoder(Factory, ContainerFormatGuids.Png);
+            using(var File = new FileStream(FileName, FileMode.Create, FileAccess.Write))
+            {
+                bitmapEncoder.Initialize(File);
+
+                var frameEncoder = new BitmapFrameEncode(bitmapEncoder);
+                frameEncoder.Initialize();
+
+                var Encoder = new ImageEncoder(Factory, D2DDevice);
+
+                Encoder.WriteFrame(Bitmap, frameEncoder, new SharpDX.WIC.ImageParameters(new SharpDX.Direct2D1.PixelFormat(SharpDX.DXGI.Format.B8G8R8A8_UNorm, 
+                    SharpDX.Direct2D1.AlphaMode.Ignore),
+                    Bitmap.DotsPerInch.Width, Bitmap.DotsPerInch.Height, 0, 0, (int)Bitmap.PixelSize.Width, (int)Bitmap.PixelSize.Height)); ;
+
+                frameEncoder.Commit();
+                bitmapEncoder.Commit();
             }
         }
     }

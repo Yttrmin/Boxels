@@ -10,11 +10,12 @@ using Device1 = SharpDX.DXGI.Device1;
 
 namespace BoxelRenderer
 {
-    public class RenderDevice
+    public sealed partial class RenderDevice
     {
         private Adapter2 Adapter;
         private Factory2 Factory;
         public SharpDX.Direct3D11.Device1 D3DDevice { get; private set; }
+        private RenderDevice2D Device2D;
         private DeviceContext1 ImmediateContext;
         private Device2 DXGIDevice;
         private SwapChain1 SwapChain;
@@ -23,13 +24,21 @@ namespace BoxelRenderer
         private ViewportF Viewport;
         private bool PlatformUpdate;
         private Stopwatch FPSWatch;
+        /// <summary>
+        /// Current number of frames rendered in the past second. Used for calculating FPS.
+        /// </summary>
         private int FrameCount;
+        /// <summary>
+        /// Total frames rendered over the lifetime of the program.
+        /// </summary>
+        private ulong TotalFrameCount;
         private const bool UseFlipSequential = false;
         public double FrameRate { get; private set; }
 
         public RenderDevice(RenderForm Window)
         {
             this.InitializeDirect3D(Window);
+            this.Device2D = new RenderDevice2D(this.DXGIDevice);
             this.FPSWatch = new Stopwatch();
             this.FPSWatch.Start();
             this.D3DDevice.ImmediateContext1.Rasterizer.State = new RasterizerState1(this.D3DDevice, new RasterizerStateDescription1()
@@ -42,6 +51,7 @@ namespace BoxelRenderer
         public void Render()
         {
             this.FrameCount++;
+            this.TotalFrameCount++;
             var Elapsed = (double)FPSWatch.ElapsedTicks / (double)Stopwatch.Frequency;
             if (Elapsed >= 1.0f)
             {
@@ -78,7 +88,7 @@ namespace BoxelRenderer
                     Stereo = false,
                     SwapEffect = UseFlipSequential ? SwapEffect.FlipSequential : SwapEffect.Sequential,
                     SampleDescription = new SampleDescription(1, 0),
-                    Usage = Usage.RenderTargetOutput 
+                    Usage = Usage.RenderTargetOutput
                 };
             var FeatureLevels = new[]
                 {FeatureLevel.Level_11_1, FeatureLevel.Level_11_0, FeatureLevel.Level_10_1, FeatureLevel.Level_10_0};

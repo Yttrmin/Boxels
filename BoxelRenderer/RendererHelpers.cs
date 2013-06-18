@@ -73,6 +73,10 @@ namespace BoxelRenderer
 			}
 		}
 
+		//@TODO - Rename me, annoying naming conflict.
+		/// <summary>
+		/// Helper class for rendering units as cubes (Minecraft style).
+		/// </summary>
 		public struct Cube
 		{
 			public const int NonIndexedVertexCount = 36;
@@ -85,13 +89,21 @@ namespace BoxelRenderer
 
 			public Cube(Vector3 Position, int BoxelSize, int TextureIndex=-1, int TextureCount=-1) : this()
 			{
+				if (BoxelSize <= 0)
+					throw new ArgumentException(String.Format("BoxelSize must be a positive number, got {0} instead.", BoxelSize));
 				this.BoxelSize = BoxelSize;
 				ConstructOffsets(out this.Offsets);
 				if (TextureIndex == -1)
 					this.TextureCoordinates = null;
 				else
+				{
+					if (TextureCount <= 0)
+						throw new ArgumentException(String.Format("TextureCount must be a positive number, got {0} instead.", TextureCount));
 					this.ConstructTextureCoordinates(out this.TextureCoordinates, TextureIndex, TextureCount);
+				}
 				this.Vertices = new Vector3[UniqueVertexCount];
+				// All of this is powered by many hours of trial and error many months ago.
+				// Don't ask questions.
 				this.Vertices[0] = Position + Offsets[0];
 				this.Vertices[1] = Position + Offsets[1];
 				this.Vertices[2] = Position + Offsets[7];
@@ -125,6 +137,8 @@ namespace BoxelRenderer
 
 			public void WriteNonIndexed(DataStream Stream)
 			{
+				// All of this is powered by many hours of trial and error many months ago.
+				// Don't ask questions.
 				Stream.Write(this.Vertices[0]);
 				Stream.Write(this.Vertices[1]);
 				Stream.Write(this.Vertices[2]);
@@ -261,6 +275,9 @@ namespace BoxelRenderer
 				Stream.Write(this.TextureCoordinates[23]);
 			}
 
+			/// <summary>
+			/// Writes out UniqueVertexCount vertices in sequential order. Will not render properly by itself.
+			/// </summary>
 			public void WriteVertices(DataStream Stream)
 			{
 				for (var i = 0; i < this.Vertices.Length; i++)
@@ -271,7 +288,7 @@ namespace BoxelRenderer
 
 			public static void WriteIndexed(DataStream Stream)
 			{
-
+				throw new NotImplementedException();
 			}
 
 			private void ConstructOffsets(out Vector3[] Offsets)
@@ -295,6 +312,8 @@ namespace BoxelRenderer
 				float IndexOverCount = ((float)Index) / TextureCount;
 				float IndexPlusOneOverCount = ((float)(Index + 1)) / TextureCount;
 
+				// All of this is powered by many hours of trial and error many months ago.
+				// Don't ask questions.
 				Coordinates[0] = new Vector2(0.125f, IndexPlusOneOverCount);
 				Coordinates[1] = new Vector2(0, IndexPlusOneOverCount);
 				Coordinates[2] = new Vector2(0.125f, IndexOverCount);

@@ -19,4 +19,9 @@ namespace BoxelCommon
         int Count { get; }
         void Compact();
     }
+
+    public interface IChunk
+    {
+
+    }
 }

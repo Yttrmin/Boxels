@@ -20,8 +20,6 @@ namespace BoxelRenderer
     public sealed class CubeNoGSRenderer : BaseRenderer
     {
         private const int BoxelSize = 2;
-        private const int VerticesPerBoxel = 24;
-        private const int EmittedVertices = 36;
 
         public CubeNoGSRenderer(Device1 Device)
             : base("PRShaders.hlsl", "VShaderTextured", null, "PShaderTextured", PrimitiveTopology.TriangleList, Device)
@@ -44,19 +42,20 @@ namespace BoxelRenderer
             InstanceCount = 0;
             var Enumerable = Boxels as IBoxel[] ?? Boxels.ToArray();
             var Random = new Random();
-            VertexCount = Enumerable.Length * EmittedVertices;
-            using (var VertexStream = new DataStream(Enumerable.Length * 
-                (Cube.NonIndexedVertexCount*Vector3.SizeInBytes + Cube.NonIndexedVertexCount*Vector2.SizeInBytes), false, true))
+            VertexCount = Enumerable.Length * Cube.NonIndexedVertexCount;
+            using (var VertexStream = new DataStream(VertexCount * VertexSizeInBytes, false, true))
             {
                 foreach (var Boxel in Enumerable)
                 {
                     new Cube(new Vector3(Boxel.Position.X * BoxelSize,
-                        Boxel.Position.Y * BoxelSize, Boxel.Position.Z * BoxelSize), BoxelSize, Random.Next(0, 7), 8).WriteNonIndexedWithUVs(VertexStream);
+                        Boxel.Position.Y * BoxelSize, Boxel.Position.Z * BoxelSize), BoxelSize, 
+                        Random.Next(0, 7), 8)
+                        .WriteNonIndexedWithUVs(VertexStream);
                 }
                 VertexBuffer = new Buffer(Device, VertexStream, (int)VertexStream.Length, ResourceUsage.Immutable,
                                                BindFlags.VertexBuffer, CpuAccessFlags.None, ResourceOptionFlags.None, 0);
                 VertexBuffer.DebugName = "BoxelsVertexBuffer";
-                Binding = new VertexBufferBinding(VertexBuffer, Vector3.SizeInBytes+Vector2.SizeInBytes, 0);
+                Binding = new VertexBufferBinding(VertexBuffer, VertexSizeInBytes, 0);
             }
         }
 

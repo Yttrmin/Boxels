@@ -61,6 +61,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BaseRenderer.cs" />
+    <Compile Include="BoxelManagerFinite.cs" />
+    <Compile Include="BoxelManagerInfiniteLinear.cs" />
     <Compile Include="CubeIndexedInstancedRenderer.cs" />
     <Compile Include="CubeIndexedRenderer.cs" />
     <Compile Include="CubeInstancedConstantBufferRenderer.cs" />
@@ -72,6 +74,7 @@
     <Compile Include="IRenderer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RenderDevice.cs" />
+    <Compile Include="RenderDevice2D.cs" />
     <Compile Include="RendererHelpers.cs" />
     <Compile Include="TextureLoader.cs" />
   </ItemGroup>

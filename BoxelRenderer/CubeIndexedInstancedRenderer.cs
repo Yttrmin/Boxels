@@ -10,19 +10,17 @@ using SharpDX.Direct3D11;
 using SharpDX.DXGI;
 using Buffer = SharpDX.Direct3D11.Buffer;
 using Device1 = SharpDX.Direct3D11.Device1;
+using Cube = BoxelRenderer.RendererHelpers.Cube;
 
 namespace BoxelRenderer
 {
-    /// <summary>
-    /// 
-    /// </summary>
-    public sealed class CubeIndexedInstancedRegister : BaseRenderer
+    public sealed class CubeIndexedInstancedRenderer : BaseRenderer
     {
         private const int BoxelSize = 2;
         private const int VerticesPerBoxel = 24;
         private const int EmittedVertices = 36;
 
-        public CubeIndexedInstancedRegister(Device1 Device)
+        public CubeIndexedInstancedRenderer(Device1 Device)
             : base("CRShaders.hlsl", "VShader", null, "PShader", PrimitiveTopology.TriangleList, Device)
         {
 
@@ -37,11 +35,10 @@ namespace BoxelRenderer
             out VertexBufferBinding Binding, out int VertexCount, out Buffer IndexBuffer, out Buffer InstanceBuffer,
             out VertexBufferBinding InstanceBinding, out int InstanceCount, int VertexSizeInBytes)
         {
-            var Enumerable = Boxels as IBoxel[] ?? Boxels.ToArray();
-            VertexCount = Cube.VertexCount;
+            VertexCount = Cube.UniqueVertexCount;
             using (var VertexStream = new DataStream(VertexCount * Vector3.SizeInBytes, false, true))
             {
-                new Cube(Vector3.Zero).WriteVertices(VertexStream);
+                new Cube(Vector3.Zero, BoxelSize).WriteVertices(VertexStream);
                 VertexBuffer = new Buffer(Device, VertexStream, (int)VertexStream.Length, ResourceUsage.Immutable,
                                                BindFlags.VertexBuffer, CpuAccessFlags.None, ResourceOptionFlags.None, 0);
                 VertexBuffer.DebugName = "BoxelsVertexBuffer";
@@ -49,7 +46,7 @@ namespace BoxelRenderer
             }
             this.GenerateIndexBuffer(out IndexBuffer, Device);
             this.GenerateInstanceBuffer(out InstanceBuffer, Boxels, Device);
-            InstanceCount = Enumerable.Length;
+            InstanceCount = Boxels.Count();
             InstanceBinding = new VertexBufferBinding(InstanceBuffer, 12, 0);
         }
 
@@ -65,7 +62,7 @@ namespace BoxelRenderer
 
         private void GenerateIndexBuffer(out Buffer IndexBuffer, Device1 Device)
         {
-            const int IndexCount = 36;
+            const int IndexCount = EmittedVertices;
             const int Size = sizeof(Int32) * IndexCount;
             using (var IndexStream = new DataStream(Size, false, true))
             {
@@ -138,129 +135,6 @@ namespace BoxelRenderer
                 InstanceBuffer = new Buffer(Device, Stream, (int)Stream.Length, ResourceUsage.Immutable,
                                             BindFlags.VertexBuffer, CpuAccessFlags.None, ResourceOptionFlags.None, 0);
                 InstanceBuffer.DebugName = "BoxelInstanceBuffer";
-            }
-        }
-
-        private struct Cube
-        {
-            public const int VertexCount = 24;
-
-            private static readonly Vector3[] Offsets;
-            private readonly Vector3[] Vertices;
-            public static readonly int SizeInBytes;
-
-            static Cube()
-            {
-                const int CubeOffset = BoxelSize / 2;
-                Offsets = new Vector3[8];
-                // Offset from center vertex for cube vertices.
-                Offsets[0] = new Vector3(-CubeOffset, -CubeOffset, CubeOffset);
-                Offsets[1] = new Vector3(CubeOffset, -CubeOffset, CubeOffset);
-                Offsets[2] = new Vector3(CubeOffset, CubeOffset, CubeOffset);
-                Offsets[3] = new Vector3(-CubeOffset, -CubeOffset, -CubeOffset);
-                Offsets[4] = new Vector3(-CubeOffset, CubeOffset, -CubeOffset);
-                Offsets[5] = new Vector3(CubeOffset, -CubeOffset, -CubeOffset);
-                Offsets[6] = new Vector3(CubeOffset, CubeOffset, -CubeOffset);
-                Offsets[7] = new Vector3(-CubeOffset, CubeOffset, CubeOffset);
-                SizeInBytes = Vector3.SizeInBytes * EmittedVertices;
-            }
-
-            public Cube(Vector3 Position)
-            {
-                this.Vertices = new Vector3[VerticesPerBoxel];
-                this.Vertices[0] = Position + Offsets[0];
-                this.Vertices[1] = Position + Offsets[1];
-                this.Vertices[2] = Position + Offsets[7];
-                this.Vertices[3] = Position + Offsets[2];
-
-                this.Vertices[4] = Position + Offsets[3];
-                this.Vertices[5] = Position + Offsets[4];
-                this.Vertices[6] = Position + Offsets[5];
-                this.Vertices[7] = Position + Offsets[6];
-
-                this.Vertices[8] = Position + Offsets[4];
-                this.Vertices[9] = Position + Offsets[7];
-                this.Vertices[10] = Position + Offsets[6];
-                this.Vertices[11] = Position + Offsets[2];
-
-                this.Vertices[12] = Position + Offsets[3];
-                this.Vertices[13] = Position + Offsets[5];
-                this.Vertices[14] = Position + Offsets[0];
-                this.Vertices[15] = Position + Offsets[1];
-
-                this.Vertices[16] = Position + Offsets[5];
-                this.Vertices[17] = Position + Offsets[6];
-                this.Vertices[18] = Position + Offsets[1];
-                this.Vertices[19] = Position + Offsets[2];
-
-                this.Vertices[20] = Position + Offsets[3];
-                this.Vertices[21] = Position + Offsets[0];
-                this.Vertices[22] = Position + Offsets[4];
-                this.Vertices[23] = Position + Offsets[7];
-            }
-
-            public void Write(DataStream Stream)
-            {
-                Stream.Write(this.Vertices[0]);
-                Stream.Write(this.Vertices[1]);
-                Stream.Write(this.Vertices[2]);
-
-                Stream.Write(this.Vertices[2]);
-                Stream.Write(this.Vertices[1]);
-                Stream.Write(this.Vertices[3]);
-
-                Stream.Write(this.Vertices[4]);
-                Stream.Write(this.Vertices[5]);
-                Stream.Write(this.Vertices[6]);
-
-                Stream.Write(this.Vertices[6]);
-                Stream.Write(this.Vertices[5]);
-                Stream.Write(this.Vertices[7]);
-
-                Stream.Write(this.Vertices[8]);
-                Stream.Write(this.Vertices[9]);
-                Stream.Write(this.Vertices[10]);
-
-                Stream.Write(this.Vertices[10]);
-                Stream.Write(this.Vertices[9]);
-                Stream.Write(this.Vertices[11]);
-
-                Stream.Write(this.Vertices[12]);
-                Stream.Write(this.Vertices[13]);
-                Stream.Write(this.Vertices[14]);
-
-                Stream.Write(this.Vertices[14]);
-                Stream.Write(this.Vertices[13]);
-                Stream.Write(this.Vertices[15]);
-
-                Stream.Write(this.Vertices[16]);
-                Stream.Write(this.Vertices[17]);
-                Stream.Write(this.Vertices[18]);
-
-                Stream.Write(this.Vertices[18]);
-                Stream.Write(this.Vertices[17]);
-                Stream.Write(this.Vertices[19]);
-
-                Stream.Write(this.Vertices[20]);
-                Stream.Write(this.Vertices[21]);
-                Stream.Write(this.Vertices[22]);
-
-                Stream.Write(this.Vertices[22]);
-                Stream.Write(this.Vertices[21]);
-                Stream.Write(this.Vertices[23]);
-            }
-
-            public void WriteVertices(DataStream Stream)
-            {
-                for (var i = 0; i < this.Vertices.Length; i++)
-                {
-                    Stream.Write(this.Vertices[i]);
-                }
-            }
-
-            public static void WriteIndexed(DataStream Stream)
-            {
-
             }
         }
     }
