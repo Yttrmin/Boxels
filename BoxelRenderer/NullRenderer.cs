@@ -6,13 +6,14 @@ using System.Threading.Tasks;
 using SharpDX;
 using SharpDX.Direct3D11;
 using Buffer = SharpDX.Direct3D11.Buffer;
+using BoxelCommon;
 
 namespace BoxelRenderer
 {
     public class NullRenderer : BaseRenderer
     {
-        public NullRenderer(Device1 Device)
-            : base("PRShaders.hlsl", "VShader", null, "PShader", SharpDX.Direct3D.PrimitiveTopology.PointList, Device)
+        public NullRenderer(Device1 Device, BoxelTypes<ICubeBoxelType> Types)
+            : base("PRShaders.hlsl", "VShader", null, "PShader", SharpDX.Direct3D.PrimitiveTopology.PointList, Device, Types)
         {
 
         }

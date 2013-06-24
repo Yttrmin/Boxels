@@ -11,6 +11,7 @@ using SharpDX.Direct3D11;
 using Buffer = SharpDX.Direct3D11.Buffer;
 using Device1 = SharpDX.Direct3D11.Device1;
 using CommonDX;
+using BoxelCommon;
 
 namespace BoxelRenderer
 {
@@ -29,22 +30,24 @@ namespace BoxelRenderer
         private int VertexSizeInBytes;
         private int VertexCount, InstanceCount;
         private ShaderResourceView Texture;
+        private int TextureCount;
         private SamplerState TextureSampler;
+        private TextureManager TextureManager;
+        private BoxelTypes<ICubeBoxelType> BoxelTypes;
 
         protected BaseRenderer(string ShaderFileName, string VertexEntryName, string GeometryEntryName,
-                                    string PixelEntryName, PrimitiveTopology Topology, Device1 Device)
+                                    string PixelEntryName, PrimitiveTopology Topology, Device1 Device, BoxelTypes<ICubeBoxelType> BoxelTypes)
         {
+            this.BoxelTypes = BoxelTypes;
             this.Topology = Topology;
             this.CompileShaders(Device, ShaderFileName, VertexEntryName, GeometryEntryName, PixelEntryName);
-            this.Texture = new ShaderResourceView(Device, 
-                TextureLoader.CreateTexture2DFromBitmap(Device, 
-                TextureLoader.LoadBitmap(new SharpDX.WIC.ImagingFactory2(), "LinearBoxels.png")));
+            //this.Texture = new ShaderResourceView(Device, TextureLoader.CreateTexture2DFromBitmap(Device, TextureLoader.LoadBitmap(new SharpDX.WIC.ImagingFactory2(), "LinearBoxels.png")));
             this.TextureSampler = new SamplerState(Device, new SamplerStateDescription()
             {
                 Filter = Filter.MinMagMipLinear,
-                AddressU = TextureAddressMode.Border,
-                AddressV = TextureAddressMode.Border,
-                AddressW = TextureAddressMode.Border,
+                AddressU = TextureAddressMode.Wrap,
+                AddressV = TextureAddressMode.Wrap,
+                AddressW = TextureAddressMode.Wrap,
                 BorderColor = SharpDX.Color.HotPink,
                 MinimumLod = float.MinValue,
                 MaximumLod = float.MaxValue,
@@ -52,6 +55,7 @@ namespace BoxelRenderer
                 MaximumAnisotropy = 1,
                 MipLodBias = 0
             });
+            this.ConstructTextures(Device);
         }
 
         public void SetView(IEnumerable<IBoxel> Boxels, int SphereHash, Device1 Device)
@@ -111,6 +115,21 @@ namespace BoxelRenderer
             out VertexBufferBinding InstanceBinding, out int InstanceCount, int VertexSizeInBytes);
 
         protected abstract void SetupInputElements(out InputElement[] Elements, out int VertexSizeInBytes);
+
+        public float GetTextureIndexByType(Axis Side, int BoxelType)
+        {
+            return this.TextureManager.GetTextureIndexInArray(this.TextureManager[this.BoxelTypes.GetTypeFromInt(BoxelType).PerSideTexture[Side]]);
+        }
+
+        private void ConstructTextures(Device1 Device)
+        {
+            this.TextureManager = new TextureManager(Device);
+            foreach (var TextureName in this.BoxelTypes.GetTextureNames())
+            {
+                this.TextureManager.Load(TextureName);
+            }
+            this.Texture = this.TextureManager.GenerateTextureArrayView(out TextureCount);
+        }
 
         private void CompileShaders(Device1 Device, string ShaderFileName, string VertexEntryName, string GeometryEntryName,
                                     string PixelEntryName)

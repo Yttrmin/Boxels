@@ -12,11 +12,13 @@ namespace BoxelCommon
     {
         public float Scale { get; private set; }
         public Int3 Position { get; private set; }
+        public int Type { get; private set; }
 
-        public BasicBoxel(Int3 Position, float Scale)
+        public BasicBoxel(Int3 Position, float Scale, int Type)
         {
             this.Position = Position;
             this.Scale = Scale;
+            this.Type = Type;
         }
     }
 }

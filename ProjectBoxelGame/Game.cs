@@ -24,24 +24,25 @@ namespace ProjectBoxelGame
         public Game(VBL.vbl Level)
         {
             this.RegisterTick(this);
-            this.Camera = new BasicCamera(new Vector3(0, 2, 0), new Vector3(1, 0, 0));
+            this.Camera = new BasicCamera(new Vector3(0, 10, 0), new Vector3(1, 0, 0));
             this.Window = new RenderForm("Project Boxel (Open PV Editor)");
             this.Window.FormBorderStyle = FormBorderStyle.Fixed3D;
             this.Window.MaximizeBox = false;
-            this.Window.ClientSize = new System.Drawing.Size(640, 480);
+            this.Window.ClientSize = new System.Drawing.Size(1280, 1024);
             this.RenderDevice = new RenderDevice(this.Window);
             this.Manager = new BoxelManager(new BoxelManager.BoxelManagerSettings()
                 {
                     Width = Level.properties.width,
                     Length = Level.properties.depth,
                     Height = Level.properties.depth
-                }, RenderDevice);
+                }, RenderDevice, new PVTypeManager());
             foreach (var Voxel in Level.voxels)
             {
-                this.Manager.Add(new BasicBoxel(new Int3(Voxel.x, Voxel.y, Voxel.z), 1.0f), 
+                this.Manager.Add(new BasicBoxel(new Int3(Voxel.x, Voxel.y, Voxel.z), 1.0f, Voxel.id), 
                     new Int3(Voxel.x, Voxel.y, Voxel.z));
             }
-            this.Window.Show();
+            this.Window.MouseMove += this.OnMouseMove;
+            this.Window.KeyDown += this.OnKeyDown;
         }
 
         public void Tick(double DeltaTime)
@@ -57,6 +58,30 @@ namespace ProjectBoxelGame
         public void Run()
         {
             RenderLoop.Run(Window, this.OnMessagePump);
+        }
+
+        private void OnMouseMove(Object Sender, MouseEventArgs Args)
+        {
+
+        }
+
+        private void OnKeyDown(Object Sender, KeyEventArgs Args)
+        {
+            switch(Args.KeyCode)
+            {
+                case Keys.W:
+                    this.Camera.MoveForward(1);
+                    break;
+                case Keys.S:
+                    this.Camera.MoveForward(-1);
+                    break;
+                case Keys.A:
+                    this.Camera.MoveRight(-1);
+                    break;
+                case Keys.D:
+                    this.Camera.MoveRight(1);
+                    break;
+            }
         }
     }
 }

@@ -18,7 +18,7 @@ namespace BoxelRenderer
         {
             private Device Device;
             private DeviceContext Context;
-            private ImagingFactory2 Factory;
+            public ImagingFactory2 Factory { get; private set; }
 
             public RenderDevice2D(SharpDX.DXGI.Device2 DXGIDevice)
             {

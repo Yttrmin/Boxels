@@ -7,6 +7,7 @@ using SharpDX;
 using SharpDX.DXGI;
 using SharpDX.Direct3D11;
 using Buffer = SharpDX.Direct3D11.Buffer;
+using BoxelCommon;
 
 namespace BoxelRenderer
 {
@@ -274,6 +275,112 @@ namespace BoxelRenderer
 				Stream.Write(this.Vertices[23]);
 				Stream.Write(this.TextureCoordinates[23]);
 			}
+
+            public void WriteNonIndexedWithTypedUVs(BaseRenderer Renderer, int Type, DataStream Stream)
+            {
+                var ZeroZero = new Vector3(0, 0, Type);
+                var ZeroOne = new Vector3(0, 1, Type);
+                var OneZero = new Vector3(1, 0, Type);
+                var OneOne = new Vector3(1, 1, Type);
+
+                var NegX = Renderer.GetTextureIndexByType(Axis.NegX, Type);
+                var PosX = Renderer.GetTextureIndexByType(Axis.PosX, Type);
+                var NegY = Renderer.GetTextureIndexByType(Axis.NegY, Type);
+                var PosY = Renderer.GetTextureIndexByType(Axis.PosY, Type);
+                var NegZ = Renderer.GetTextureIndexByType(Axis.NegZ, Type);
+                var PosZ = Renderer.GetTextureIndexByType(Axis.PosZ, Type);
+
+
+                // Side 1
+                Stream.Write(this.Vertices[0]);
+                Stream.Write(new Vector3(0, 1, PosX));
+                Stream.Write(this.Vertices[1]);
+                Stream.Write(new Vector3(1, 1, PosX));
+                Stream.Write(this.Vertices[2]);
+                Stream.Write(new Vector3(0, 0, PosX));
+
+                Stream.Write(this.Vertices[2]);
+                Stream.Write(new Vector3(0, 0, PosX));
+                Stream.Write(this.Vertices[1]);
+                Stream.Write(new Vector3(1, 1, PosX));
+                Stream.Write(this.Vertices[3]);
+                Stream.Write(new Vector3(1, 0, PosX));
+
+                // Side 2
+                Stream.Write(this.Vertices[4]);
+                Stream.Write(new Vector3(0, 1, NegX));
+                Stream.Write(this.Vertices[5]);
+                Stream.Write(new Vector3(0, 0, NegX));
+                Stream.Write(this.Vertices[6]);
+                Stream.Write(new Vector3(1, 1, NegX));
+
+                Stream.Write(this.Vertices[6]);
+                Stream.Write(new Vector3(0, 1, NegX));
+                Stream.Write(this.Vertices[5]);
+                Stream.Write(new Vector3(1, 0, NegX));
+                Stream.Write(this.Vertices[7]);
+                Stream.Write(new Vector3(0, 0, NegX));
+
+                // Side 3
+                Stream.Write(this.Vertices[8]);
+                Stream.Write(new Vector3(0, 0, PosY));
+                Stream.Write(this.Vertices[9]);
+                Stream.Write(new Vector3(1, 0, PosY));
+                Stream.Write(this.Vertices[10]);
+                Stream.Write(new Vector3(0, 1, PosY));
+
+                Stream.Write(this.Vertices[10]);
+                Stream.Write(new Vector3(0, 1, PosY));
+                Stream.Write(this.Vertices[9]);
+                Stream.Write(new Vector3(1, 0, PosY));
+                Stream.Write(this.Vertices[11]);
+                Stream.Write(new Vector3(1, 1, PosY));
+
+                // Side 4
+                Stream.Write(this.Vertices[12]);
+                Stream.Write(new Vector3(0, 0, NegY));
+                Stream.Write(this.Vertices[13]);
+                Stream.Write(new Vector3(1, 0, NegY));
+                Stream.Write(this.Vertices[14]);
+                Stream.Write(new Vector3(0, 1, NegY));
+
+                Stream.Write(this.Vertices[14]);
+                Stream.Write(new Vector3(0, 1, NegY));
+                Stream.Write(this.Vertices[13]);
+                Stream.Write(new Vector3(1, 0, NegY));
+                Stream.Write(this.Vertices[15]);
+                Stream.Write(new Vector3(1, 1, NegY));
+
+                // Side 5
+                Stream.Write(this.Vertices[16]);
+                Stream.Write(new Vector3(0, 1, PosZ));
+                Stream.Write(this.Vertices[17]);
+                Stream.Write(new Vector3(0, 0, PosZ));
+                Stream.Write(this.Vertices[18]);
+                Stream.Write(new Vector3(1, 1, PosZ));
+
+                Stream.Write(this.Vertices[18]);
+                Stream.Write(new Vector3(0, 1, PosZ));
+                Stream.Write(this.Vertices[17]);
+                Stream.Write(new Vector3(1, 0, PosZ));
+                Stream.Write(this.Vertices[19]);
+                Stream.Write(new Vector3(0, 0, PosZ));
+
+                // Side 6
+                Stream.Write(this.Vertices[20]);
+                Stream.Write(new Vector3(1, 1, NegZ));
+                Stream.Write(this.Vertices[21]);
+                Stream.Write(new Vector3(0, 1, NegZ));
+                Stream.Write(this.Vertices[22]);
+                Stream.Write(new Vector3(1, 0, NegZ));
+
+                Stream.Write(this.Vertices[22]);
+                Stream.Write(new Vector3(0, 0, NegZ));
+                Stream.Write(this.Vertices[21]);
+                Stream.Write(new Vector3(1, 1, NegZ));
+                Stream.Write(this.Vertices[23]);
+                Stream.Write(new Vector3(0, 0, NegZ));
+            }
 
 			/// <summary>
 			/// Writes out UniqueVertexCount vertices in sequential order. Will not render properly by itself.

@@ -14,5 +14,8 @@ namespace BoxelLib
         Matrix View { get; }
         Vector3 Position { get; }
         Vector3 LookDirection { get; }
+
+        void MoveRight(float Amount);
+        void MoveForward(float Amount);
     }
 }

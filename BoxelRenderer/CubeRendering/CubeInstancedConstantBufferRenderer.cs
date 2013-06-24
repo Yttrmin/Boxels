@@ -8,6 +8,7 @@ using SharpDX;
 using SharpDX.Direct3D;
 using SharpDX.Direct3D11;
 using Buffer = SharpDX.Direct3D11.Buffer;
+using BoxelCommon;
 
 namespace BoxelRenderer
 {
@@ -17,8 +18,8 @@ namespace BoxelRenderer
         private const int MaxBoxels = 4096;
         private const int BoxelSize = 2;
 
-        public CubeInstancedConstantBufferRenderer(Device1 Device)
-            : base("CRShaders.hlsl", "VShaderCBuffer", null, "PShader", PrimitiveTopology.TriangleList, Device)
+        public CubeInstancedConstantBufferRenderer(Device1 Device, BoxelTypes<ICubeBoxelType> Types)
+            : base("CRShaders.hlsl", "VShaderCBuffer", null, "PShader", PrimitiveTopology.TriangleList, Device, Types)
         {
             
         }

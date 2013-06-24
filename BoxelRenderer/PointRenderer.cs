@@ -7,13 +7,14 @@ using SharpDX.Direct3D;
 using SharpDX.Direct3D11;
 using Buffer = SharpDX.Direct3D11.Buffer;
 using Device1 = SharpDX.Direct3D11.Device1;
+using BoxelCommon;
 
 namespace BoxelRenderer
 {
     public sealed class PointRenderer : BaseRenderer
     {
-        public PointRenderer(Device1 Device) 
-            : base("PRShaders.hlsl", "VShader", null, "PShader", PrimitiveTopology.PointList, Device)
+        public PointRenderer(Device1 Device, BoxelTypes<ICubeBoxelType> Types) 
+            : base("PRShaders.hlsl", "VShader", null, "PShader", PrimitiveTopology.PointList, Device, Types)
         {
 
         }

@@ -10,6 +10,7 @@ using SharpDX.Direct3D;
 using SharpDX.Direct3D11;
 using Buffer = SharpDX.Direct3D11.Buffer;
 using Device1 = SharpDX.Direct3D11.Device1;
+using BoxelCommon;
 
 namespace BoxelRenderer
 {
@@ -20,8 +21,8 @@ namespace BoxelRenderer
         private Texture2D BoxelTexture;
         private ShaderResourceView BoxelTextureView;
 
-        public CubeRenderer(Device1 Device)
-            : base("BRShaders.hlsl", "VShader", "GShader", "PShader", PrimitiveTopology.PointList, Device)
+        public CubeRenderer(Device1 Device, BoxelTypes<ICubeBoxelType> Types)
+            : base("BRShaders.hlsl", "VShader", "GShader", "PShader", PrimitiveTopology.PointList, Device, Types)
         {
             this.CubeConstantData = this.InitializeCubeData(Device);
         }

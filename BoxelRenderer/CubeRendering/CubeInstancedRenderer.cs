@@ -10,6 +10,7 @@ using SharpDX.Direct3D;
 using SharpDX.Direct3D11;
 using Buffer = SharpDX.Direct3D11.Buffer;
 using Device1 = SharpDX.Direct3D11.Device1;
+using BoxelCommon;
 
 namespace BoxelRenderer
 {
@@ -19,8 +20,8 @@ namespace BoxelRenderer
         private const int VerticesPerBoxel = 24;
         private const int EmittedVertices = 36;
 
-        public CubeInstancedRenderer(Device1 Device)
-            : base("CRShaders.hlsl", "VShader", null, "PShader", PrimitiveTopology.TriangleList, Device)
+        public CubeInstancedRenderer(Device1 Device, BoxelTypes<ICubeBoxelType> Types)
+            : base("CRShaders.hlsl", "VShader", null, "PShader", PrimitiveTopology.TriangleList, Device, Types)
         {
 
         }

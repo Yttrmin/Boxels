@@ -6,5 +6,6 @@ namespace BoxelLib
     {
         float Scale { get; }
         Int3 Position { get; }
+        int Type { get; }
     }
 }

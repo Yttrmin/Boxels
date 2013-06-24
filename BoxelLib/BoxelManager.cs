@@ -33,6 +33,7 @@ namespace BoxelLib
         private readonly IBoxelContainer Boxels;
         private readonly IBoxelRenderer Renderer;
         private readonly RenderDevice RenderDevice;
+        private BoxelTypes<ICubeBoxelType> BoxelTypes;
         [Obsolete("There won't be JUST boxels so this should be somewhere else. Need a more general rendering manager.")]
         private readonly Buffer PerFrameData;
         private const bool Benchmark = false;
@@ -46,43 +47,44 @@ namespace BoxelLib
         }
         public IEnumerable<IBoxel> AllBoxels { get { return this.Boxels.AllBoxels; } } 
 
-        public BoxelManager(BoxelManagerSettings Settings, RenderDevice RenderDevice)
+        public BoxelManager(BoxelManagerSettings Settings, RenderDevice RenderDevice, BoxelTypes<ICubeBoxelType> Types)
         {
             if(Settings.UseChunks)
                 throw new NotImplementedException("Chunking not supported.");
             this.Settings = Settings;
             var LargestSide = Math.Max(Math.Max(Settings.Width, Settings.Height), Settings.Length);
+            this.BoxelTypes = Types;
             this.Boxels = new ConstantRandomContainer();
             foreach (var Arg in Environment.GetCommandLineArgs())
             {
                 if (Arg == "point")
                 {
                     Trace.WriteLine("Using PointRenderer.");
-                    this.Renderer = new PointRenderer(RenderDevice.D3DDevice);
+                    this.Renderer = new PointRenderer(RenderDevice.D3DDevice, this.BoxelTypes);
                     break;
                 }
                 else if (Arg == "cube")
                 {
                     Trace.WriteLine("Using CubeRenderer.");
-                    this.Renderer = new CubeRenderer(RenderDevice.D3DDevice);
+                    this.Renderer = new CubeRenderer(RenderDevice.D3DDevice, this.BoxelTypes);
                     break;
                 }
                 else if (Arg == "cubenogs")
                 {
                     Trace.WriteLine("Using CubeNoGSRenderer.");
-                    this.Renderer = new CubeNoGSRenderer(RenderDevice.D3DDevice);
+                    this.Renderer = new CubeNoGSRenderer(RenderDevice.D3DDevice, this.BoxelTypes);
                     break;
                 }
                 else if (Arg == "cubeii")
                 {
                     Trace.WriteLine("Using CubeIIR");
-                    this.Renderer = new CubeIndexedInstancedRenderer(RenderDevice.D3DDevice);
+                    this.Renderer = new CubeIndexedInstancedRenderer(RenderDevice.D3DDevice, this.BoxelTypes);
                 }
             }
             if (this.Renderer == null)
             {
                 Trace.WriteLine("Using CubeNoGSRenderer by default.");
-                this.Renderer = new CubeNoGSRenderer(RenderDevice.D3DDevice);
+                this.Renderer = new CubeNoGSRenderer(RenderDevice.D3DDevice, this.BoxelTypes);
             }
             this.DrawDistance = 32;
             this.RenderDevice = RenderDevice;

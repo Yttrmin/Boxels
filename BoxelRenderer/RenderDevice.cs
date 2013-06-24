@@ -15,7 +15,7 @@ namespace BoxelRenderer
         private Adapter2 Adapter;
         private Factory2 Factory;
         public SharpDX.Direct3D11.Device1 D3DDevice { get; private set; }
-        private RenderDevice2D Device2D;
+        public RenderDevice2D Device2D { get; private set; }
         private DeviceContext1 ImmediateContext;
         private Device2 DXGIDevice;
         private SwapChain1 SwapChain;
@@ -46,6 +46,7 @@ namespace BoxelRenderer
                     CullMode = CullMode.Back,
                     FillMode = FillMode.Solid
                 });
+            
         }
 
         public void Render()
