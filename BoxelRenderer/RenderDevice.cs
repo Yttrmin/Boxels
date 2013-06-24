@@ -33,6 +33,7 @@ namespace BoxelRenderer
         /// </summary>
         private ulong TotalFrameCount;
         private const bool UseFlipSequential = false;
+        private Color ClearColor;
         public double FrameRate { get; private set; }
 
         public RenderDevice(RenderForm Window)
@@ -46,7 +47,7 @@ namespace BoxelRenderer
                     CullMode = CullMode.Back,
                     FillMode = FillMode.Solid
                 });
-            
+            this.ClearColor = new Color(119, 228, 255);
         }
 
         public void Render()
@@ -62,7 +63,7 @@ namespace BoxelRenderer
                 FPSWatch.Restart();
             }
             this.SwapChain.Present(0, PresentFlags.None);
-            this.ImmediateContext.ClearRenderTargetView(this.BackBuffer, Color.Black);
+            this.ImmediateContext.ClearRenderTargetView(this.BackBuffer, this.ClearColor);
             this.ImmediateContext.ClearDepthStencilView(this.DepthBuffer, DepthStencilClearFlags.Depth, 1, 0);
             this.ImmediateContext.OutputMerger.SetTargets(this.DepthBuffer, this.BackBuffer);
         }
@@ -130,7 +131,7 @@ namespace BoxelRenderer
         {
             this.Viewport = new Viewport(0, 0, this.SwapChain.Description1.Width,
                 this.SwapChain.Description1.Height, 0, 1);
-            this.ImmediateContext.Rasterizer.SetViewports(this.Viewport);
+            this.ImmediateContext.Rasterizer.SetViewport(this.Viewport);
         }
 
         private void InitializeDepthBuffer(int Width, int Height)

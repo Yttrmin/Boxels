@@ -52,6 +52,7 @@ namespace BoxelRenderer
 						Boxel.Position.Y * BoxelSize, Boxel.Position.Z * BoxelSize), BoxelSize)
 						.WriteNonIndexedWithTypedUVs(this, Boxel.Type, VertexStream);
 				}
+                VertexStream.Position = 0;
 				VertexBuffer = new Buffer(Device, VertexStream, (int)VertexStream.Length, ResourceUsage.Immutable,
 											   BindFlags.VertexBuffer, CpuAccessFlags.None, ResourceOptionFlags.None, 0);
 				VertexBuffer.DebugName = "BoxelsVertexBuffer";

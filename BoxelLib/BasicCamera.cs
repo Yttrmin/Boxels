@@ -20,7 +20,8 @@ namespace BoxelLib
         {
             get
             {
-                return Matrix.LookAtLH(Position, new Vector3(10000, -5000, 10000), new Vector3(0, 1, 0));
+                //return Matrix.LookAtLH(Position, new Vector3(10000, -5000, 10000), new Vector3(0, 1, 0));
+                return CalculateViewMatrix();
             }
         }
 
@@ -36,7 +37,7 @@ namespace BoxelLib
 
         public void Tick(double DeltaTime)
         {
-            Position = new Vector3((float) (this.Position.X + (0.5*DeltaTime)), Position.Y, (float) (this.Position.Z + (0.5*DeltaTime)));
+            //Position = new Vector3((float) (this.Position.X + (0.5*DeltaTime)), Position.Y, (float) (this.Position.Z + (0.5*DeltaTime)));
         }
 
         public void MoveRight(float Amount)
@@ -66,7 +67,7 @@ namespace BoxelLib
             this.NextMoveForward = 0;
             this.NextMoveRight = 0;
 
-            this.Position = CamTarget + this.Position;
+            CamTarget = CamTarget + this.Position;
 
             return Matrix.LookAtLH(this.Position, CamTarget, this.Up);
         }
