@@ -17,5 +17,7 @@ namespace BoxelLib
 
         void MoveRight(float Amount);
         void MoveForward(float Amount);
+        void TurnRight(float Amount);
+        void TurnUp(float Amount);
     }
 }

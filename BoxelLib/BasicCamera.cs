@@ -16,11 +16,11 @@ namespace BoxelLib
         private float NextMoveRight, NextMoveForward;
         private readonly Vector3 DefaultForward, DefaultRight;
         private Vector3 Up;
+        private const float ToRadians = (float)Math.PI / 180.0f;
         public Matrix View
         {
             get
             {
-                //return Matrix.LookAtLH(Position, new Vector3(10000, -5000, 10000), new Vector3(0, 1, 0));
                 return CalculateViewMatrix();
             }
         }
@@ -29,7 +29,7 @@ namespace BoxelLib
         {
             this.Position = Position;
             this.LookDirection = LookDirection;
-            this.Projection = Matrix.PerspectiveFovLH((float)(90.0f * (Math.PI / 180.0f)), 1.25f, 1.0f, 2000.0f);
+            this.Projection = Matrix.PerspectiveFovLH((float)(135.0f * (Math.PI / 180.0f)), 1.25f, 1.0f, 2000.0f);
             this.DefaultForward = new Vector3(0, 0, 1);
             this.DefaultRight = new Vector3(1, 0, 0);
             this.Up = new Vector3(0, 1, 0);
@@ -37,7 +37,17 @@ namespace BoxelLib
 
         public void Tick(double DeltaTime)
         {
-            //Position = new Vector3((float) (this.Position.X + (0.5*DeltaTime)), Position.Y, (float) (this.Position.Z + (0.5*DeltaTime)));
+            if (this.NextMoveForward == 0 && this.NextMoveRight == 0)
+                return;
+            var CamRotation = Matrix.RotationYawPitchRoll(Yaw * ToRadians, Pitch * ToRadians, Roll * ToRadians);
+            var CamRight = Vector3.TransformCoordinate(this.DefaultRight, CamRotation);
+            var CamForward = Vector3.TransformCoordinate(this.DefaultForward, CamRotation);
+
+            this.Position += CamRight * this.NextMoveRight;
+            this.Position += CamForward * this.NextMoveForward;
+
+            this.NextMoveForward = 0;
+            this.NextMoveRight = 0;
         }
 
         public void MoveRight(float Amount)
@@ -50,22 +60,25 @@ namespace BoxelLib
             NextMoveForward += Amount;
         }
 
+        public void TurnRight(float Amount)
+        {
+            this.Yaw += Amount;
+        }
+
+        public void TurnUp(float Amount)
+        {
+            this.Pitch += Amount;
+            this.Pitch = Math.Max(Math.Min(this.Pitch, 89), -89);
+        }
+
         private Matrix CalculateViewMatrix()
         {
-            var CamRotation = Matrix.RotationYawPitchRoll(Yaw, Pitch, Roll);
+            var CamRotation = Matrix.RotationYawPitchRoll(Yaw * ToRadians, Pitch * ToRadians, Roll * ToRadians);
             var CamTarget = Vector3.TransformCoordinate(this.DefaultForward, CamRotation);
             Vector3.Normalize(ref CamTarget, out CamTarget);
 
-            var CamYRotation = Matrix.RotationY(this.Pitch * (float)(Math.PI / 180.0f));
-            var CamRight = Vector3.TransformCoordinate(this.DefaultRight, CamRotation);
-            Vector3.TransformCoordinate(ref this.Up, ref CamRotation, out this.Up);
-            var CamForward = Vector3.TransformCoordinate(this.DefaultForward, CamRotation);
-
-            this.Position += CamRight * this.NextMoveRight;
-            this.Position += CamForward * this.NextMoveForward;
-
-            this.NextMoveForward = 0;
-            this.NextMoveRight = 0;
+            var CamYRotation = Matrix.RotationY(this.Pitch * ToRadians);
+            Vector3.TransformCoordinate(ref this.Up, ref CamYRotation, out this.Up);
 
             CamTarget = CamTarget + this.Position;
 

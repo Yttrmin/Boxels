@@ -26,13 +26,12 @@ namespace ProjectBoxelGame
 
         public Game(VBL.vbl Level)
         {
-            this.Input = new Input();
             this.RegisterTick(this);
             this.Camera = new BasicCamera(new Vector3(0, 10, 0), new Vector3(1, 0, 0));
             this.Window = new RenderForm("Project Boxel (Open PV Editor)");
             this.Window.FormBorderStyle = FormBorderStyle.Fixed3D;
             this.Window.MaximizeBox = false;
-            this.Window.ClientSize = new System.Drawing.Size(640, 480);
+            this.Window.ClientSize = new System.Drawing.Size(1280, 1024);
             this.RenderDevice = new RenderDevice(this.Window);
             this.Manager = new BoxelManager(new BoxelManager.BoxelManagerSettings()
                 {
@@ -45,10 +44,17 @@ namespace ProjectBoxelGame
                 this.Manager.Add(new BasicBoxel(new Int3(Voxel.x, Voxel.y, Voxel.z), 1.0f, Voxel.id), 
                     new Int3(Voxel.x, Voxel.y, Voxel.z));
             }
+            this.Window.Show();
+            this.Input = new Input(this.Window);
         }
 
         public void Tick(double DeltaTime)
         {
+            if (this.Input.IsDown(Keys.Escape))
+            {
+                this.Window.Close();
+                return;
+            }
             var Magnitude = 10;
             Magnitude *= this.Input.IsDown(Keys.ShiftKey) ? 10 : 1;
             //Trace.WriteLine(String.Format("DT: {0}", DeltaTime));
@@ -60,8 +66,11 @@ namespace ProjectBoxelGame
                 this.Camera.MoveForward(-Magnitude * (float)DeltaTime);
             if (this.Input.IsDown(Keys.D))
                 this.Camera.MoveRight(Magnitude * (float)DeltaTime);
+            this.Camera.TurnRight(this.Input.DeltaX);
+            this.Camera.TurnUp(this.Input.DeltaY);
             this.Camera.Tick(DeltaTime);
             this.Manager.Render(this.Camera);
+            this.Input.ResetMouse();
         }
 
         /// <summary>
