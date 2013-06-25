@@ -13,7 +13,7 @@ namespace BoxelRenderer
 {
     public sealed class PointRenderer : BaseRenderer
     {
-        public PointRenderer(Device1 Device, BoxelTypes<ICubeBoxelType> Types) 
+        public PointRenderer(RenderDevice Device, BoxelTypes<ICubeBoxelType> Types) 
             : base("PRShaders.hlsl", "VShader", null, "PShader", PrimitiveTopology.PointList, Device, Types)
         {
 

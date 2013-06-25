@@ -43,6 +43,7 @@ namespace BoxelRenderer
         {
             this.TextureMap[Path] = TextureLoader.CreateTexture2DFromBitmap(this.Device, 
                         TextureLoader.LoadBitmap(this.ImagingFactory, Path), true);
+            this.TextureMap[Path].DebugName = Path;
             if (this.TextureMap.Count == 1)
             {
                 var Desc = this.TextureMap.Values.ElementAt(0).Description;

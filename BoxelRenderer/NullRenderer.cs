@@ -12,7 +12,7 @@ namespace BoxelRenderer
 {
     public class NullRenderer : BaseRenderer
     {
-        public NullRenderer(Device1 Device, BoxelTypes<ICubeBoxelType> Types)
+        public NullRenderer(RenderDevice Device, BoxelTypes<ICubeBoxelType> Types)
             : base("PRShaders.hlsl", "VShader", null, "PShader", SharpDX.Direct3D.PrimitiveTopology.PointList, Device, Types)
         {
 

@@ -34,15 +34,16 @@ namespace BoxelRenderer
         private SamplerState TextureSampler;
         private TextureManager TextureManager;
         private BoxelTypes<ICubeBoxelType> BoxelTypes;
+        private GPUProfiler Profiler;
 
         protected BaseRenderer(string ShaderFileName, string VertexEntryName, string GeometryEntryName,
-                                    string PixelEntryName, PrimitiveTopology Topology, Device1 Device, BoxelTypes<ICubeBoxelType> BoxelTypes)
+                                    string PixelEntryName, PrimitiveTopology Topology, RenderDevice Device, BoxelTypes<ICubeBoxelType> BoxelTypes)
         {
             this.BoxelTypes = BoxelTypes;
             this.Topology = Topology;
-            this.CompileShaders(Device, ShaderFileName, VertexEntryName, GeometryEntryName, PixelEntryName);
+            this.CompileShaders(Device.D3DDevice, ShaderFileName, VertexEntryName, GeometryEntryName, PixelEntryName);
             //this.Texture = new ShaderResourceView(Device, TextureLoader.CreateTexture2DFromBitmap(Device, TextureLoader.LoadBitmap(new SharpDX.WIC.ImagingFactory2(), "LinearBoxels.png")));
-            this.TextureSampler = new SamplerState(Device, new SamplerStateDescription()
+            this.TextureSampler = new SamplerState(Device.D3DDevice, new SamplerStateDescription()
             {
                 Filter = Filter.MinMagMipLinear,
                 AddressU = TextureAddressMode.Wrap,
@@ -55,7 +56,8 @@ namespace BoxelRenderer
                 MaximumAnisotropy = 1,
                 MipLodBias = 0
             });
-            this.ConstructTextures(Device);
+            this.ConstructTextures(Device.D3DDevice);
+            this.Profiler = Device.Profiler;
         }
 
         public void SetView(IEnumerable<IBoxel> Boxels, int SphereHash, Device1 Device)
@@ -87,6 +89,7 @@ namespace BoxelRenderer
                 Context.DrawInstanced(this.VertexCount, this.InstanceCount, 0, 0);
             else if(this.VertexBuffer != null)
                 Context.Draw(this.VertexCount, 0);
+            this.Profiler.RecordTimeStamp(GPUProfiler.TimeStamp.DrawTerrain);
         }
 
         public void Dispose()

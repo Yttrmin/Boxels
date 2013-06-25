@@ -21,10 +21,10 @@ namespace BoxelRenderer
         private Texture2D BoxelTexture;
         private ShaderResourceView BoxelTextureView;
 
-        public CubeRenderer(Device1 Device, BoxelTypes<ICubeBoxelType> Types)
+        public CubeRenderer(RenderDevice Device, BoxelTypes<ICubeBoxelType> Types)
             : base("BRShaders.hlsl", "VShader", "GShader", "PShader", PrimitiveTopology.PointList, Device, Types)
         {
-            this.CubeConstantData = this.InitializeCubeData(Device);
+            this.CubeConstantData = this.InitializeCubeData(Device.D3DDevice);
         }
 
         protected override void GenerateBuffers(IEnumerable<IBoxel> Boxels, Device1 Device, out Buffer VertexBuffer,

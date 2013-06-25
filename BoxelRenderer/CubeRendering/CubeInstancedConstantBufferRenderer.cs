@@ -18,7 +18,7 @@ namespace BoxelRenderer
         private const int MaxBoxels = 4096;
         private const int BoxelSize = 2;
 
-        public CubeInstancedConstantBufferRenderer(Device1 Device, BoxelTypes<ICubeBoxelType> Types)
+        public CubeInstancedConstantBufferRenderer(RenderDevice Device, BoxelTypes<ICubeBoxelType> Types)
             : base("CRShaders.hlsl", "VShaderCBuffer", null, "PShader", PrimitiveTopology.TriangleList, Device, Types)
         {
             

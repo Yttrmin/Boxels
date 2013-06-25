@@ -56,6 +56,7 @@ namespace ProjectBoxelGame
 
         public void Tick(double DeltaTime)
         {
+            this.RenderDevice.Profiler.StartFrame(DeltaTime);
             if (this.Input.IsDown(Keys.Escape))
             {
                 this.Window.Close();

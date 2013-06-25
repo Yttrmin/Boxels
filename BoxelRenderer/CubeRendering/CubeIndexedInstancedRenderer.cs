@@ -21,7 +21,7 @@ namespace BoxelRenderer
         private const int VerticesPerBoxel = 24;
         private const int EmittedVertices = 36;
 
-        public CubeIndexedInstancedRenderer(Device1 Device, BoxelTypes<ICubeBoxelType> Types)
+        public CubeIndexedInstancedRenderer(RenderDevice Device, BoxelTypes<ICubeBoxelType> Types)
             : base("CRShaders.hlsl", "VShader", null, "PShader", PrimitiveTopology.TriangleList, Device, Types)
         {
 

@@ -61,31 +61,31 @@ namespace BoxelLib
                 if (Arg == "point")
                 {
                     Trace.WriteLine("Using PointRenderer.");
-                    this.Renderer = new PointRenderer(RenderDevice.D3DDevice, this.BoxelTypes);
+                    this.Renderer = new PointRenderer(RenderDevice, this.BoxelTypes);
                     break;
                 }
                 else if (Arg == "cube")
                 {
                     Trace.WriteLine("Using CubeRenderer.");
-                    this.Renderer = new CubeRenderer(RenderDevice.D3DDevice, this.BoxelTypes);
+                    this.Renderer = new CubeRenderer(RenderDevice, this.BoxelTypes);
                     break;
                 }
                 else if (Arg == "cubenogs")
                 {
                     Trace.WriteLine("Using CubeNoGSRenderer.");
-                    this.Renderer = new CubeNoGSRenderer(RenderDevice.D3DDevice, this.BoxelTypes);
+                    this.Renderer = new CubeNoGSRenderer(RenderDevice, this.BoxelTypes);
                     break;
                 }
                 else if (Arg == "cubeii")
                 {
                     Trace.WriteLine("Using CubeIIR");
-                    this.Renderer = new CubeIndexedInstancedRenderer(RenderDevice.D3DDevice, this.BoxelTypes);
+                    this.Renderer = new CubeIndexedInstancedRenderer(RenderDevice, this.BoxelTypes);
                 }
             }
             if (this.Renderer == null)
             {
                 Trace.WriteLine("Using CubeNoGSRenderer by default.");
-                this.Renderer = new CubeNoGSRenderer(RenderDevice.D3DDevice, this.BoxelTypes);
+                this.Renderer = new CubeNoGSRenderer(RenderDevice, this.BoxelTypes);
             }
             this.DrawDistance = 32;
             this.RenderDevice = RenderDevice;
@@ -133,7 +133,9 @@ namespace BoxelLib
                 GC.Collect(3, GCCollectionMode.Forced, true);
                 Trace.WriteLine("!Forcing Garbage Collection Complete!!REMOVE ME!");
             }
+            this.RenderDevice.Profiler.RecordTimeStamp(GPUProfiler.TimeStamp.FrameIdle);
             this.UpdatePerFrameData(RenderCamera);
+            this.RenderDevice.Profiler.RecordTimeStamp(GPUProfiler.TimeStamp.PerFrameBufferUpdate);
             this.Renderer.Render(this.RenderDevice.D3DDevice.ImmediateContext1);
             this.RenderDevice.Render();
         }

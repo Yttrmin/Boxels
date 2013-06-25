@@ -16,6 +16,7 @@ namespace BoxelRenderer
         private Factory2 Factory;
         public SharpDX.Direct3D11.Device1 D3DDevice { get; private set; }
         public RenderDevice2D Device2D { get; private set; }
+        public GPUProfiler Profiler { get; private set; }
         private DeviceContext1 ImmediateContext;
         private Device2 DXGIDevice;
         private SwapChain1 SwapChain;
@@ -23,49 +24,38 @@ namespace BoxelRenderer
         private DepthStencilView DepthBuffer;
         private ViewportF Viewport;
         private bool PlatformUpdate;
-        private Stopwatch FPSWatch;
-        /// <summary>
-        /// Current number of frames rendered in the past second. Used for calculating FPS.
-        /// </summary>
-        private int FrameCount;
-        /// <summary>
-        /// Total frames rendered over the lifetime of the program.
-        /// </summary>
-        private ulong TotalFrameCount;
         private const bool UseFlipSequential = false;
         private Color ClearColor;
-        public double FrameRate { get; private set; }
 
         public RenderDevice(RenderForm Window)
         {
             this.InitializeDirect3D(Window);
             this.Device2D = new RenderDevice2D(this.DXGIDevice);
-            this.FPSWatch = new Stopwatch();
-            this.FPSWatch.Start();
             this.D3DDevice.ImmediateContext1.Rasterizer.State = new RasterizerState1(this.D3DDevice, new RasterizerStateDescription1()
                 {
                     CullMode = CullMode.Back,
                     FillMode = FillMode.Solid
                 });
             this.ClearColor = new Color(119, 228, 255);
+            this.Profiler = new GPUProfiler(this.D3DDevice);
         }
 
         public void Render()
         {
-            this.FrameCount++;
-            this.TotalFrameCount++;
-            var Elapsed = (double)FPSWatch.ElapsedTicks / (double)Stopwatch.Frequency;
-            if (Elapsed >= 1.0f)
+            try
             {
-                this.FrameRate = FrameCount / Elapsed;
-                this.FrameCount = 0;
-                Trace.WriteLine(String.Format("FPS: {0}", this.FrameRate));
-                FPSWatch.Restart();
+                this.SwapChain.Present(0, PresentFlags.None);
             }
-            this.SwapChain.Present(0, PresentFlags.None);
+            catch(Exception e)
+            {
+                Trace.WriteLine(String.Format("Fatal SwapChain.Present exception. DeviceRemovedReason: {0}", this.D3DDevice.DeviceRemovedReason.ToString()));
+                throw e;
+            }
+            this.Profiler.RecordTimeStamp(GPUProfiler.TimeStamp.Present);
             this.ImmediateContext.ClearRenderTargetView(this.BackBuffer, this.ClearColor);
             this.ImmediateContext.ClearDepthStencilView(this.DepthBuffer, DepthStencilClearFlags.Depth, 1, 0);
             this.ImmediateContext.OutputMerger.SetTargets(this.DepthBuffer, this.BackBuffer);
+            this.Profiler.EndFrame();
         }
 
         public void Resize(int NewWidth, int NewHeight)

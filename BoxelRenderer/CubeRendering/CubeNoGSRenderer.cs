@@ -22,7 +22,7 @@ namespace BoxelRenderer
 	{
 		private const int BoxelSize = 2;
 
-		public CubeNoGSRenderer(Device1 Device, BoxelTypes<ICubeBoxelType> Types)
+        public CubeNoGSRenderer(RenderDevice Device, BoxelTypes<ICubeBoxelType> Types)
 			: base("CubeShaders.hlsl", "VShaderTextured", null, "PShaderTextured", PrimitiveTopology.TriangleList, Device, Types)
 		{
 			
