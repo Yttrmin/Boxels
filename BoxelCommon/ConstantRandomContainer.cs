@@ -127,8 +127,6 @@ namespace BoxelCommon
     {
         public static Byte3 From(Vector3 Vect)
         {
-            //@TODO @FIXME Depend on actual boxel size.
-            Vect /= 16;
             checked
             {
                 return new Byte3((byte)(((byte)Vect.X) / ConstantRandomContainer.ChunkSize),

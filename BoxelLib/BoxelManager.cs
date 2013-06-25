@@ -37,6 +37,7 @@ namespace BoxelLib
         [Obsolete("There won't be JUST boxels so this should be somewhere else. Need a more general rendering manager.")]
         private readonly Buffer PerFrameData;
         private const bool Benchmark = false;
+        private const int AllBoxelHash = unchecked((int)0xDEADBEEF);
         /// <summary>
         /// Minimum number of boxels to draw from camera in all directions.
         /// </summary>
@@ -108,13 +109,25 @@ namespace BoxelLib
 
         public void Render(ICamera RenderCamera)
         {
-            var CenterChunk = ChunkPosition.From(RenderCamera.Position);
-            var Hash = ChunkPosition.HashSphere(CenterChunk, this.DrawDistance);
-            if (this.Renderer.ViewHash != Hash)
+            if (this.Settings.UseChunks)
             {
-                this.Renderer.SetView(this.Boxels.BoxelsInRadius(CenterChunk, this.DrawDistance), 
-                    Hash, this.RenderDevice.D3DDevice);
-                Trace.WriteLine("!Forcing Garbage Collection!!REMOVE ME!");
+                var CenterChunk = ChunkPosition.From(RenderCamera.Position);
+                var Hash = ChunkPosition.HashSphere(CenterChunk, this.DrawDistance);
+                if (this.Renderer.ViewHash != Hash)
+                {
+                    this.Renderer.SetView(this.Boxels.BoxelsInRadius(CenterChunk, this.DrawDistance),
+                        Hash, this.RenderDevice.D3DDevice);
+                    Trace.WriteLine("!Forcing Garbage Collection!!REMOVE ME!");
+                    GC.Collect(3, GCCollectionMode.Forced, true);
+                    GC.WaitForPendingFinalizers();
+                    GC.Collect(3, GCCollectionMode.Forced, true);
+                    Trace.WriteLine("!Forcing Garbage Collection Complete!!REMOVE ME!");
+                }
+            }
+            else if (!this.Settings.UseChunks && this.Renderer.ViewHash != AllBoxelHash)
+            {
+                this.Renderer.SetView(this.Boxels.AllBoxels, AllBoxelHash, this.RenderDevice.D3DDevice);
+                Trace.WriteLine("!Forcing Garbage Collection!!REMOVE ME!!This should only happen once!");
                 GC.Collect(3, GCCollectionMode.Forced, true);
                 GC.WaitForPendingFinalizers();
                 GC.Collect(3, GCCollectionMode.Forced, true);

@@ -68,6 +68,22 @@ namespace BoxelRenderer
             this.ImmediateContext.OutputMerger.SetTargets(this.DepthBuffer, this.BackBuffer);
         }
 
+        public void Resize(int NewWidth, int NewHeight)
+        {
+            System.Diagnostics.Trace.WriteLine(String.Format("Resizing from {0}x{1} to {2}x{3}", this.SwapChain.Description1.Width,
+                this.SwapChain.Description1.Height, NewWidth, NewHeight));
+            this.BackBuffer.Dispose();
+            this.DepthBuffer.Dispose();
+
+            this.SwapChain.ResizeBuffers(2, NewWidth, NewHeight, Format.B8G8R8A8_UNorm, SwapChainFlags.None);
+            var BackBufferTexture = this.SwapChain.GetBackBuffer<Texture2D>(0);
+            this.BackBuffer = new RenderTargetView(this.D3DDevice, BackBufferTexture);
+            BackBufferTexture.Dispose();
+            this.InitializeDepthBuffer(NewWidth, NewHeight);
+            this.InitializeViewport();
+            this.ImmediateContext.OutputMerger.SetRenderTargets(this.DepthBuffer, this.BackBuffer);
+        }
+
         private void InitializeDirect3D(RenderForm Window)
         {
             Trace.WriteLine("------------------Start D3D11.1-----------------------------");
@@ -124,6 +140,7 @@ namespace BoxelRenderer
             //Trace.WriteLine(this.GetFeaturesString());
             this.InitializeViewport();
             this.InitializeDepthBuffer(BackBufferTexture.Description.Width, BackBufferTexture.Description.Height);
+            BackBufferTexture.Dispose();
             Trace.WriteLine("-------------------End D3D11.1------------------------------");
         }
 
@@ -147,6 +164,7 @@ namespace BoxelRenderer
                     BindFlags = BindFlags.DepthStencil,
                 });
             this.DepthBuffer = new DepthStencilView(this.D3DDevice, DepthBufferTexture);
+            DepthBufferTexture.Dispose();
         }
 
         private string GetFeaturesString()

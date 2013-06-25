@@ -51,11 +51,12 @@ namespace ProjectBoxelGame
             return this.KeyStates[Key] == KeyState.KeyUp;
         }
 
-        public void ResetMouse()
+        public void ResetMouse(bool ResetCursor)
         {
             this.DeltaX = 0;
             this.DeltaY = 0;
-            SetCursorPos(this.CenterX, this.CenterY);
+            if(ResetCursor)
+                SetCursorPos(this.CenterX, this.CenterY);
         }
 
         private void OnKeyEvent(Object Sender, KeyboardInputEventArgs Args)

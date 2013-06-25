@@ -19,5 +19,6 @@ namespace BoxelLib
         void MoveForward(float Amount);
         void TurnRight(float Amount);
         void TurnUp(float Amount);
+        void SetDimensions(int Width, int Height);
     }
 }

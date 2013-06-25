@@ -25,11 +25,11 @@ namespace BoxelLib
             }
         }
 
-        public BasicCamera(Vector3 Position, Vector3 LookDirection)
+        public BasicCamera(Vector3 Position, Vector3 LookDirection, int Width, int Height)
         {
             this.Position = Position;
             this.LookDirection = LookDirection;
-            this.Projection = Matrix.PerspectiveFovLH((float)(135.0f * (Math.PI / 180.0f)), 1.25f, 1.0f, 2000.0f);
+            this.SetDimensions(Width, Height);
             this.DefaultForward = new Vector3(0, 0, 1);
             this.DefaultRight = new Vector3(1, 0, 0);
             this.Up = new Vector3(0, 1, 0);
@@ -69,6 +69,11 @@ namespace BoxelLib
         {
             this.Pitch += Amount;
             this.Pitch = Math.Max(Math.Min(this.Pitch, 89), -89);
+        }
+
+        public void SetDimensions(int Width, int Height)
+        {
+            this.Projection = Matrix.PerspectiveFovLH((float)(80.0f * (Math.PI / 180.0f)), (float)Width/Height, 1.0f, 2000.0f);
         }
 
         private Matrix CalculateViewMatrix()
