@@ -16,7 +16,7 @@ using SharpDX.Multimedia;
 
 namespace ProjectBoxelGame
 {
-    sealed class Game : GameBase, ITickable
+    sealed class Game : GameBase, ITickable, IDisposable
     {
         private readonly BoxelManager Manager;
         private readonly RenderForm Window;
@@ -81,13 +81,16 @@ namespace ProjectBoxelGame
                 this.Camera.MoveForward(-Magnitude * (float)DeltaTime);
             if (this.Input.IsDown(Keys.D))
                 this.Camera.MoveRight(Magnitude * (float)DeltaTime);
-            if (this.Input.IsDown(Keys.ControlKey))
+            if (this.Input.WasPressed(Keys.ControlKey))
                 this.MouseEnabled = !this.MouseEnabled;
+            if (this.Input.WasPressed(Keys.F2))
+                this.RenderDevice.SetFullscreen();
             if (this.MouseEnabled)
             {
                 this.Camera.TurnRight(this.Input.DeltaX);
                 this.Camera.TurnUp(this.Input.DeltaY);
             }
+            this.Input.ResetKeyPresses();
             this.Camera.Tick(DeltaTime);
             this.Manager.Render(this.Camera);
             this.Input.ResetMouse(this.MouseEnabled);
@@ -99,6 +102,26 @@ namespace ProjectBoxelGame
         public void Run()
         {
             RenderLoop.Run(Window, this.OnMessagePump);
+        }
+
+        private void Dispose(bool Disposing)
+        {
+            Trace.WriteLine("Disposing Game...");
+            if (Disposing)
+            {
+                this.RenderDevice.Dispose();
+                GC.SuppressFinalize(this);
+            }
+        }
+
+        public void Dispose()
+        {
+            this.Dispose(true);
+        }
+
+        ~Game()
+        {
+            this.Dispose(false);
         }
     }
 }

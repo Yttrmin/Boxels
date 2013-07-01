@@ -10,10 +10,11 @@ using Device1 = SharpDX.DXGI.Device1;
 
 namespace BoxelRenderer
 {
-    public sealed partial class RenderDevice
+    public sealed partial class RenderDevice : IDisposable
     {
         private Adapter2 Adapter;
         private Factory2 Factory;
+        private DeviceDebug DebugDevice; 
         public SharpDX.Direct3D11.Device1 D3DDevice { get; private set; }
         public RenderDevice2D Device2D { get; private set; }
         public GPUProfiler Profiler { get; private set; }
@@ -24,13 +25,18 @@ namespace BoxelRenderer
         private DepthStencilView DepthBuffer;
         private ViewportF Viewport;
         private bool PlatformUpdate;
-        private const bool UseFlipSequential = false;
+        private const bool UseFlipSequential = true;
         private Color ClearColor;
 
         public RenderDevice(RenderForm Window)
         {
             this.InitializeDirect3D(Window);
             this.Device2D = new RenderDevice2D(this.DXGIDevice);
+            using (var BackBufferSurface = this.SwapChain.GetBackBuffer<Surface2>(0))
+            {
+                BackBufferSurface.DebugName = "BackBufferSurface::RenderDevice:ctor";
+                this.Device2D.SetRenderTarget(BackBufferSurface);
+            }
             this.D3DDevice.ImmediateContext1.Rasterizer.State = new RasterizerState1(this.D3DDevice, new RasterizerStateDescription1()
                 {
                     CullMode = CullMode.Back,
@@ -42,15 +48,10 @@ namespace BoxelRenderer
 
         public void Render()
         {
-            try
-            {
-                this.SwapChain.Present(0, PresentFlags.None);
-            }
-            catch(Exception e)
-            {
-                Trace.WriteLine(String.Format("Fatal SwapChain.Present exception. DeviceRemovedReason: {0}", this.D3DDevice.DeviceRemovedReason.ToString()));
-                throw e;
-            }
+            this.Device2D.Draw();
+            this.Profiler.Render(this.Device2D);
+            this.Profiler.RecordTimeStamp(GPUProfiler.TimeStamp.Idle);
+            this.SwapChain.Present(1, PresentFlags.None);
             this.Profiler.RecordTimeStamp(GPUProfiler.TimeStamp.Present);
             this.ImmediateContext.ClearRenderTargetView(this.BackBuffer, this.ClearColor);
             this.ImmediateContext.ClearDepthStencilView(this.DepthBuffer, DepthStencilClearFlags.Depth, 1, 0);
@@ -62,16 +63,31 @@ namespace BoxelRenderer
         {
             System.Diagnostics.Trace.WriteLine(String.Format("Resizing from {0}x{1} to {2}x{3}", this.SwapChain.Description1.Width,
                 this.SwapChain.Description1.Height, NewWidth, NewHeight));
+
+            this.ReportLiveObjects();
+            this.Device2D.SetRenderTarget(null);
             this.BackBuffer.Dispose();
             this.DepthBuffer.Dispose();
+            this.ReportLiveObjects();
 
             this.SwapChain.ResizeBuffers(2, NewWidth, NewHeight, Format.B8G8R8A8_UNorm, SwapChainFlags.None);
-            var BackBufferTexture = this.SwapChain.GetBackBuffer<Texture2D>(0);
-            this.BackBuffer = new RenderTargetView(this.D3DDevice, BackBufferTexture);
-            BackBufferTexture.Dispose();
+            using (var BackBufferTexture = this.SwapChain.GetBackBuffer<Texture2D>(0))
+            {
+                this.BackBuffer = new RenderTargetView(this.D3DDevice, BackBufferTexture);
+                using (var BackBufferSurface = BackBufferTexture.QueryInterface<Surface2>())
+                {
+                    this.Device2D.SetRenderTarget(BackBufferSurface);
+                }
+            }
             this.InitializeDepthBuffer(NewWidth, NewHeight);
             this.InitializeViewport();
             this.ImmediateContext.OutputMerger.SetRenderTargets(this.DepthBuffer, this.BackBuffer);
+        }
+
+        public void SetFullscreen()
+        {
+            this.SwapChain.SetFullscreenState(true, null);
+            this.Resize(1280, 1024);
         }
 
         private void InitializeDirect3D(RenderForm Window)
@@ -96,7 +112,7 @@ namespace BoxelRenderer
                     Stereo = false,
                     SwapEffect = UseFlipSequential ? SwapEffect.FlipSequential : SwapEffect.Sequential,
                     SampleDescription = new SampleDescription(1, 0),
-                    Usage = Usage.RenderTargetOutput
+                    Usage = Usage.RenderTargetOutput,
                 };
             var FeatureLevels = new[]
                 {FeatureLevel.Level_11_1, FeatureLevel.Level_11_0, FeatureLevel.Level_10_1, FeatureLevel.Level_10_0};
@@ -112,6 +128,7 @@ namespace BoxelRenderer
 #endif
             this.D3DDevice = new SharpDX.Direct3D11.Device(this.Adapter, Flags)
                 .QueryInterface<SharpDX.Direct3D11.Device1>();
+            this.CreateDebugDevice();
             this.D3DDevice.DebugName = "D3DDevice";
             this.ImmediateContext = this.D3DDevice.ImmediateContext1;
             this.ImmediateContext.DebugName = "ImmediateContext";
@@ -122,6 +139,7 @@ namespace BoxelRenderer
             Trace.WriteLine("Success... Creating DXGI1.1 SwapChain...");
             this.SwapChain = this.Factory.CreateSwapChainForHwnd(this.DXGIDevice, Window.Handle, ref SwapDesc, null, null);
             this.SwapChain.DebugName = "SwapChain";
+            this.Factory.MakeWindowAssociation(Window.Handle, WindowAssociationFlags.IgnoreAll);
             var BackBufferTexture = this.SwapChain.GetBackBuffer<Texture2D>(0);
             this.BackBuffer = new RenderTargetView(this.D3DDevice, BackBufferTexture);
             this.BackBuffer.DebugName = "BackBufferRTV";
@@ -155,6 +173,18 @@ namespace BoxelRenderer
                 });
             this.DepthBuffer = new DepthStencilView(this.D3DDevice, DepthBufferTexture);
             DepthBufferTexture.Dispose();
+        }
+
+        [Conditional("DEBUG")]
+        private void ReportLiveObjects()
+        {
+            this.DebugDevice.ReportLiveDeviceObjects(ReportingLevel.Detail);
+        }
+
+        [Conditional("DEBUG")]
+        private void CreateDebugDevice()
+        {
+            this.DebugDevice = new DeviceDebug(this.D3DDevice);
         }
 
         private string GetFeaturesString()
@@ -206,6 +236,35 @@ namespace BoxelRenderer
             Builder.AppendLine();
             Builder.AppendLine("=========End Features.==========");
             return Builder.ToString();
+        }
+
+        private void Dispose(bool Disposing)
+        {
+            Trace.WriteLine("Disposing RenderDevice...");
+            this.ImmediateContext.Dispose();
+            this.Adapter.Dispose();
+            this.Factory.Dispose();
+            this.BackBuffer.Dispose();
+            this.DepthBuffer.Dispose();
+            this.SwapChain.Dispose();
+            if(this.DebugDevice != null)
+                this.DebugDevice.Dispose();
+            this.D3DDevice.Dispose();
+            if (Disposing)
+            {
+                this.Device2D.Dispose();
+                GC.SuppressFinalize(this);
+            }
+        }
+
+        public void Dispose()
+        {
+            this.Dispose(true);
+        }
+
+        ~RenderDevice()
+        {
+            this.Dispose(false);
         }
     }
 }

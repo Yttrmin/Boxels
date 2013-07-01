@@ -14,6 +14,7 @@ namespace ProjectBoxelGame
     class Input
     {
         private IDictionary<Keys, KeyState> KeyStates;
+        private ISet<Keys> PressedKeys;
         private RenderForm Window;
         private int CenterX, CenterY;
         public int DeltaX {get; private set;}
@@ -25,6 +26,7 @@ namespace ProjectBoxelGame
             this.CenterX = this.Window.DesktopLocation.X + this.Window.Width/2;
             this.CenterY = this.Window.DesktopLocation.Y + this.Window.Height/2;
             //SetCursorPos(this.CenterX, this.CenterY);
+            this.PressedKeys = new HashSet<Keys>();
             this.KeyStates = new Dictionary<Keys, KeyState>();
             foreach(Keys KeyEnum in Enum.GetValues(typeof(Keys)))
             {
@@ -51,6 +53,11 @@ namespace ProjectBoxelGame
             return this.KeyStates[Key] == KeyState.KeyUp;
         }
 
+        public bool WasPressed(Keys Key)
+        {
+            return this.PressedKeys.Contains(Key);
+        }
+
         public void ResetMouse(bool ResetCursor)
         {
             this.DeltaX = 0;
@@ -59,9 +66,16 @@ namespace ProjectBoxelGame
                 SetCursorPos(this.CenterX, this.CenterY);
         }
 
+        public void ResetKeyPresses()
+        {
+            this.PressedKeys.Clear();
+        }
+
         private void OnKeyEvent(Object Sender, KeyboardInputEventArgs Args)
         {
             KeyStates[Args.Key] = Args.State;
+            if (Args.State == KeyState.KeyUp)
+                this.PressedKeys.Add(Args.Key);
             //System.Diagnostics.Trace.WriteLine(String.Format("Input: {0} is now {1}", Args.Key, Args.State));
         }
 

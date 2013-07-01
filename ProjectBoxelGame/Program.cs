@@ -35,9 +35,11 @@ namespace ProjectBoxelGame
             }
             Timer.Stop();
             Trace.WriteLine(String.Format("Took {0}ms to deserialize VBL.", Timer.ElapsedMilliseconds));
-            var Game = new Game(Level);
-            Trace.WriteLine("Close render window to exit.");
-            Game.Run();
+            using (var Game = new Game(Level))
+            {
+                Trace.WriteLine("Close render window to exit.");
+                Game.Run();
+            }
             Trace.WriteLine(String.Format("Exiting normally at {0}", DateTime.Now.ToString()));
         }
 
@@ -45,8 +47,10 @@ namespace ProjectBoxelGame
         {
             Trace.WriteLine("------------------------UNHANDLED EXCEPTION-------------------------");
             Trace.WriteLine(Args.ExceptionObject.ToString());
+#if !DEBUG
             Trace.WriteLine("--------------Press enter to continue (crashing)...-----------------");
             Console.ReadLine();
+#endif
         }
 
         private static void SetupOutputRedirects()

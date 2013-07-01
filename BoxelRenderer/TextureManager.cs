@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace BoxelRenderer
 {
-    internal class TextureManager
+    internal class TextureManager : IDisposable
     {
         private IDictionary<string, Texture2D> TextureMap;
         private IList<Texture2D> TexturesByIndex;
@@ -87,6 +87,21 @@ namespace BoxelRenderer
                 Context.UnmapSubresource(Texture, 0);
             }
             return new ShaderResourceView(this.Device, FinalTexture);
+        }
+
+        private void Dispose(bool Disposing)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Dispose()
+        {
+            this.Dispose(true);
+        }
+
+        ~TextureManager()
+        {
+            this.Dispose(false);
         }
     }
 }

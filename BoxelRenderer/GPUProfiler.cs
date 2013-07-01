@@ -1,4 +1,5 @@
-﻿using SharpDX.Direct3D11;
+﻿using SharpDX;
+using SharpDX.Direct3D11;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -32,7 +33,8 @@ namespace BoxelRenderer
             PerFrameBufferUpdate,
             DrawTerrain,
             Present,
-            PipelineInformation
+            PipelineInformation,
+            Idle,
         }
         public struct Stats
         {
@@ -44,11 +46,12 @@ namespace BoxelRenderer
             public float Clear;
             public long PrimitivesSent;
             public long PrimitivesRendererd;
+            public long IdleByPresent;
 
             public override string ToString()
             {
-                return String.Format("GPU frame: {0}ms  Pre-Draw: {4}ms  PerFrameCBuffer: {5}ms  TerrainDraw: {1}ms  PresentTime: {2}ms  ClearTime: {3}ms | PrimsSent: {6}  PrimsRendered: {7}", 
-                    FrameTime, Terrain, Present, Clear, IdleTime, PerFrameBufferTime, PrimitivesSent, PrimitivesRendererd);
+                return String.Format("GPU frame: {0}ms  Pre-Draw: {4}ms  PerFrameCBuffer: {5}ms  TerrainDraw: {1}ms  PresentTime: {2}ms  ClearTime: {3}ms | PrimsSent: {6}  PrimsRendered: {7} | IdleByPresent: {8}", 
+                    FrameTime, Terrain, Present, Clear, IdleTime, PerFrameBufferTime, PrimitivesSent, PrimitivesRendererd, IdleByPresent);
             }
         }
         private Device1 Device;
@@ -56,10 +59,11 @@ namespace BoxelRenderer
         private IDictionary<TimeStamp, Query[]> Queries;
         private bool Waiting;
         private bool Disjoint;
-        private Stats AverageStats;
+        private Stats AverageStats, PreviousStats;
         private double TotalCPUDelta;
         private Stopwatch Timer;
         private int FrameCount;
+        private long TotalFrameCount;
         private bool PendingCalculation;
         private int FreeQueryIndex;
         private int Stalls;
@@ -78,6 +82,8 @@ namespace BoxelRenderer
             this.Queries[TimeStamp.FrameDisjoint] = new Query[2];
             this.Queries[TimeStamp.FrameDisjoint][0] = new Query(this.Device, QueryDesc);
             this.Queries[TimeStamp.FrameDisjoint][1] = new Query(this.Device, QueryDesc);
+            this.Queries[TimeStamp.FrameDisjoint][0].DebugName = TimeStamp.FrameDisjoint.ToString() + "_0";
+            this.Queries[TimeStamp.FrameDisjoint][1].DebugName = TimeStamp.FrameDisjoint.ToString() + "_1";
             QueryDesc = new QueryDescription()
             {
                 Type = QueryType.PipelineStatistics,
@@ -86,6 +92,18 @@ namespace BoxelRenderer
             this.Queries[TimeStamp.PipelineInformation] = new Query[2];
             this.Queries[TimeStamp.PipelineInformation][0] = new Query(this.Device, QueryDesc);
             this.Queries[TimeStamp.PipelineInformation][1] = new Query(this.Device, QueryDesc);
+            this.Queries[TimeStamp.PipelineInformation][0].DebugName = TimeStamp.PipelineInformation.ToString() + "_0";
+            this.Queries[TimeStamp.PipelineInformation][0].DebugName = TimeStamp.PipelineInformation.ToString() + "_1";
+            QueryDesc = new QueryDescription()
+            {
+                Type = QueryType.Event,
+                Flags = QueryFlags.None
+            };
+            this.Queries[TimeStamp.Idle] = new Query[2];
+            this.Queries[TimeStamp.Idle][0] = new Query(this.Device, QueryDesc);
+            this.Queries[TimeStamp.Idle][1] = new Query(this.Device, QueryDesc);
+            this.Queries[TimeStamp.Idle][0].DebugName = TimeStamp.Idle.ToString() + "_0";
+            this.Queries[TimeStamp.Idle][0].DebugName = TimeStamp.Idle.ToString() + "_1";
             QueryDesc = new QueryDescription()
             {
                 Type = QueryType.Timestamp,
@@ -97,7 +115,9 @@ namespace BoxelRenderer
                     continue;
                 this.Queries[Stamp] = new Query[2];
                 this.Queries[Stamp][0] = new Query(this.Device, QueryDesc);
+                this.Queries[Stamp][0].DebugName = Stamp.ToString() + "_0";
                 this.Queries[Stamp][1] = new Query(this.Device, QueryDesc);
+                this.Queries[Stamp][1].DebugName = Stamp.ToString() + "_1";
             }
 
         }
@@ -108,6 +128,7 @@ namespace BoxelRenderer
             Immediate.Begin(this.GetQueryObject(TimeStamp.FrameDisjoint));
             Immediate.End(this.GetQueryObject(TimeStamp.BeginFrame));
             this.FrameCount++;
+            this.TotalFrameCount++;
             this.TotalCPUDelta += DeltaTime;
             this.Timer.Start();
         }
@@ -137,17 +158,23 @@ namespace BoxelRenderer
             }
         }
 
+        public void Render(BoxelRenderer.RenderDevice.RenderDevice2D RenderDevice)
+        {
+            var FPSRect = new RectangleF(0, 0, 200, 200);
+            RenderDevice.DrawText(this.PreviousStats.FrameTime.ToString(), FPSRect);
+        }
+
         private void PrintStats(double Elapsed)
         {
             var Builder = new StringBuilder();
-            Builder.AppendFormat("FPS: {0} CPU frame: {1}ms  ", this.FrameCount / Elapsed, this.TotalCPUDelta / this.FrameCount * 1000);
+            Builder.AppendFormat("(F{2}) FPS: {0} CPU frame: {1}ms  ", this.FrameCount / Elapsed, this.TotalCPUDelta / this.FrameCount * 1000, this.TotalFrameCount);
             if (this.Disjoint)
             {
                 Builder.Append("GPU timings disjoint, data unavailable.");
             }
             else
             {
-                var AveragedStats = new Stats()
+                PreviousStats = new Stats()
                 {
                     Clear = this.AverageStats.Clear / this.FrameCount,
                     FrameTime = this.AverageStats.FrameTime / this.FrameCount,
@@ -158,7 +185,7 @@ namespace BoxelRenderer
                     PrimitivesRendererd = this.AverageStats.PrimitivesRendererd / this.FrameCount,
                     PrimitivesSent = this.AverageStats.PrimitivesSent / this.FrameCount,
                 };
-                Builder.Append(AveragedStats);
+                Builder.Append(PreviousStats);
             }
             Builder.AppendFormat(" | QueryStalls: {0}", this.Stalls);
             Trace.WriteLine(Builder.ToString());
@@ -166,6 +193,7 @@ namespace BoxelRenderer
             this.TotalCPUDelta = 0;
             this.FrameCount = 0;
             this.Stalls = 0;
+            this.Disjoint = false;
         }
 
         private void CalculateStats()
@@ -183,6 +211,7 @@ namespace BoxelRenderer
 
             long BeginFrame, EndFrame, Terrain, Present, Idle, Buffer;
             QueryDataPipelineStatistics PipelineStats;
+            bool WasIdle;
             bool Success = true;
             Success &= this.Immediate.GetData(this.GetQueryObject(TimeStamp.BeginFrame), AsynchronousFlags.None, out BeginFrame);
             Success &= this.Immediate.GetData(this.GetQueryObject(TimeStamp.EndFrame), AsynchronousFlags.None, out EndFrame);
@@ -190,7 +219,7 @@ namespace BoxelRenderer
             Success &= this.Immediate.GetData(this.GetQueryObject(TimeStamp.Present), AsynchronousFlags.None, out Present);
             Success &= this.Immediate.GetData(this.GetQueryObject(TimeStamp.FrameIdle), AsynchronousFlags.None, out Idle);
             Success &= this.Immediate.GetData(this.GetQueryObject(TimeStamp.PerFrameBufferUpdate), AsynchronousFlags.None, out Buffer);
-            if (!Success)
+            if(!Success)
                 throw new InvalidOperationException("Timestamp queries not ready.");
             this.AverageStats = new Stats()
             {
@@ -204,6 +233,9 @@ namespace BoxelRenderer
             this.WaitForPipelineData(out PipelineStats);
             this.AverageStats.PrimitivesRendererd = PipelineStats.CPrimitiveCount;
             this.AverageStats.PrimitivesSent = PipelineStats.IAPrimitiveCount;
+            this.WaitForEvent(out WasIdle);
+            if (WasIdle)
+                this.AverageStats.IdleByPresent++;
         }
 
         private void ToggleFreeQueries()
@@ -224,6 +256,13 @@ namespace BoxelRenderer
         {
             while (this.Immediate.GetData(this.GetQueryObject(TimeStamp.PipelineInformation), AsynchronousFlags.None, out Data) == false)
                 this.Stalls++;
+        }
+
+        private void WaitForEvent(out bool Result)
+        {
+            long LResult;
+            while (this.Immediate.GetData(this.GetQueryObject(TimeStamp.Idle), AsynchronousFlags.None, out LResult) == false) ;
+            Result = Convert.ToBoolean(LResult);
         }
 
         private Query GetQueryObject(TimeStamp Stamp)
