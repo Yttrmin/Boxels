@@ -12,10 +12,11 @@ using Buffer = SharpDX.Direct3D11.Buffer;
 using Device1 = SharpDX.Direct3D11.Device1;
 using CommonDX;
 using BoxelCommon;
+using System;
 
 namespace BoxelRenderer
 {
-    public abstract class BaseRenderer : IBoxelRenderer
+    public abstract class BaseRenderer : IBoxelRenderer, IDisposable
     {
         public int ViewHash { get; private set; }
         private InputLayout Layout;
@@ -60,6 +61,7 @@ namespace BoxelRenderer
             this.Profiler = Device.Profiler;
         }
 
+        [Timer]
         public void SetView(IEnumerable<IBoxel> Boxels, int SphereHash, Device1 Device)
         {
             Debug.Assert(SphereHash != this.ViewHash);
@@ -92,17 +94,6 @@ namespace BoxelRenderer
             this.Profiler.RecordTimeStamp(GPUProfiler.TimeStamp.DrawTerrain);
         }
 
-        public void Dispose()
-        {
-            this.Layout.Dispose();
-            this.VertexShader.Dispose();
-            this.GeometryShader.Dispose();
-            this.PixelShader.Dispose();
-            this.VertexBuffer.Dispose();
-            this.IndexBuffer.Dispose();
-            this.InstanceBuffer.Dispose();
-        }
-
         /// <summary>
         /// Allows child classes to do their own rendering work before the Draw call.
         /// The child does not have to worry about (and should not mess with):
@@ -113,6 +104,7 @@ namespace BoxelRenderer
         /// <param name="Context"></param>
         protected abstract void PreRender(DeviceContext1 Context);
 
+        [Timer]
         protected abstract void GenerateBuffers(IEnumerable<IBoxel> Boxels, Device1 Device, out Buffer VertexBuffer,
             out VertexBufferBinding Binding, out int VertexCount, out Buffer IndexBuffer, out Buffer InstanceBuffer,
             out VertexBufferBinding InstanceBinding, out int InstanceCount, int VertexSizeInBytes);
@@ -180,5 +172,34 @@ namespace BoxelRenderer
             this.Layout = new InputLayout(Device, VertexShaderSignature, Elements);
         }
 
+        private void Dispose(bool Disposing)
+        {
+            this.Layout.Dispose();
+            this.Texture.Dispose();
+            this.VertexShader.Dispose();
+            if(this.GeometryShader != null)
+                this.GeometryShader.Dispose();
+            this.PixelShader.Dispose();
+            this.VertexBuffer.Dispose();
+            if(this.IndexBuffer != null)
+                this.IndexBuffer.Dispose();
+            if(this.InstanceBuffer != null)
+                this.InstanceBuffer.Dispose();
+            if (Disposing)
+            {
+                this.TextureManager.Dispose();
+                GC.SuppressFinalize(this);
+            }
+        }
+
+        public void Dispose()
+        {
+            this.Dispose(true);
+        }
+
+        ~BaseRenderer()
+        {
+            this.Dispose(false);
+        }
     }
 }

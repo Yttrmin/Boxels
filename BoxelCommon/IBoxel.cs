@@ -1,4 +1,5 @@
-﻿using SharpDX;
+﻿using BoxelCommon;
+using SharpDX;
 
 namespace BoxelLib
 {
@@ -7,5 +8,6 @@ namespace BoxelLib
         float Scale { get; }
         Int3 Position { get; }
         int Type { get; }
+        IBoxelContainer Container { get; set; }
     }
 }

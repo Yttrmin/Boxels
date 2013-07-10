@@ -25,22 +25,22 @@ namespace ProjectBoxelGame
             SetupOutputRedirects();
             Trace.WriteLine(String.Format("Project Boxel v{0}", FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location).FileVersion));
             Trace.WriteLine("Creating RenderForm...");
-            var Serializer = new XmlSerializer(typeof(vbl));
-            vbl Level;
-            Stopwatch Timer = new Stopwatch();
-            Timer.Start();
-            using (var Reader = XmlReader.Create("test_map_big.vbl"))
-            {
-                Level = (vbl)Serializer.Deserialize(Reader);
-            }
-            Timer.Stop();
-            Trace.WriteLine(String.Format("Took {0}ms to deserialize VBL.", Timer.ElapsedMilliseconds));
-            using (var Game = new Game(Level))
+            using (var Game = new Game(LoadVBL("test_map_big.vbl")))
             {
                 Trace.WriteLine("Close render window to exit.");
                 Game.Run();
             }
             Trace.WriteLine(String.Format("Exiting normally at {0}", DateTime.Now.ToString()));
+        }
+
+        [BoxelCommon.Timer]
+        private static vbl LoadVBL(string Filename)
+        {
+            var Serializer = new XmlSerializer(typeof(vbl));
+            using (var Reader = XmlReader.Create(Filename))
+            {
+                return (vbl)Serializer.Deserialize(Reader);
+            }
         }
 
         private static void LogUnhandledException(Object Sender, UnhandledExceptionEventArgs Args)
@@ -55,16 +55,20 @@ namespace ProjectBoxelGame
 
         private static void SetupOutputRedirects()
         {
-            TextWriterTraceListener twtl = new TextWriterTraceListener(Environment.UserName+"-Log-"+(DateTime.UtcNow - DateTime.MinValue).TotalSeconds+".txt");
-            twtl.Name = "TextLogger";
-            twtl.TraceOutputOptions = TraceOptions.ThreadId | TraceOptions.DateTime;
+            using (TextWriterTraceListener twtl = new TextWriterTraceListener(Environment.UserName + "-Log-" + (DateTime.UtcNow - DateTime.MinValue).TotalSeconds + ".txt"))
+            {
+                twtl.Name = "TextLogger";
+                twtl.TraceOutputOptions = TraceOptions.ThreadId | TraceOptions.DateTime;
 
-            ConsoleTraceListener ctl = new ConsoleTraceListener(false);
-            ctl.TraceOutputOptions = TraceOptions.DateTime;
+                using (ConsoleTraceListener ctl = new ConsoleTraceListener(false))
+                {
+                    ctl.TraceOutputOptions = TraceOptions.DateTime;
 
-            Trace.Listeners.Add(twtl);
-            Trace.Listeners.Add(ctl);
-            Trace.AutoFlush = true;
+                    Trace.Listeners.Add(twtl);
+                    Trace.Listeners.Add(ctl);
+                    Trace.AutoFlush = true;
+                }
+            }
 
             AppDomain.CurrentDomain.UnhandledException += LogUnhandledException;
             Trace.WriteLine(String.Format("Log started at {0}", DateTime.Now.ToString()));

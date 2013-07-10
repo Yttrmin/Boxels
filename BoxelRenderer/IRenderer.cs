@@ -2,6 +2,7 @@
 using BoxelLib;
 using SharpDX.Direct3D11;
 using Device1 = SharpDX.Direct3D11.Device1;
+using System;
 
 namespace BoxelRenderer
 {
@@ -10,7 +11,7 @@ namespace BoxelRenderer
 
     }
     
-    public interface IBoxelRenderer : IRenderer
+    public interface IBoxelRenderer : IRenderer, IDisposable
     {
         int ViewHash { get; }
         void SetView(IEnumerable<IBoxel> Boxels, int SphereHash, Device1 Device);

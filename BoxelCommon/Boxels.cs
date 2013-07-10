@@ -13,6 +13,7 @@ namespace BoxelCommon
         public float Scale { get; private set; }
         public Int3 Position { get; private set; }
         public int Type { get; private set; }
+        public IBoxelContainer Container { get; set; }
 
         public BasicBoxel(Int3 Position, float Scale, int Type)
         {

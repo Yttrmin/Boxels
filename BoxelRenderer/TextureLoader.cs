@@ -38,25 +38,18 @@ namespace CommonDX
         /// </summary>
         /// <param name="deviceManager"></param>
         /// <param name="filename"></param>
-        /// <returns></returns>
+        /// <returns>The image file as a BitmapSource. Make sure to Dispose() of it or use a using statement.</returns>
         public static SharpDX.WIC.BitmapSource LoadBitmap(SharpDX.WIC.ImagingFactory2 factory, string filename)
         {
-            var bitmapDecoder = new SharpDX.WIC.BitmapDecoder(
-                factory,
-                filename,
-                SharpDX.WIC.DecodeOptions.CacheOnDemand
-                );
-
             var formatConverter = new SharpDX.WIC.FormatConverter(factory);
-
-            formatConverter.Initialize(
-                bitmapDecoder.GetFrame(0),
-                SharpDX.WIC.PixelFormat.Format32bppPRGBA,
-                SharpDX.WIC.BitmapDitherType.None, 
-                null,
-                0.0, 
-                SharpDX.WIC.BitmapPaletteType.Custom);
-
+            using (var bitmapDecoder = new SharpDX.WIC.BitmapDecoder(factory, filename, SharpDX.WIC.DecodeOptions.CacheOnDemand))
+            {
+                using(var Frame = bitmapDecoder.GetFrame(0))
+                {
+                    formatConverter.Initialize(Frame, SharpDX.WIC.PixelFormat.Format32bppPRGBA, SharpDX.WIC.BitmapDitherType.None,
+                        null, 0.0, SharpDX.WIC.BitmapPaletteType.Custom);
+                }
+            }
             return formatConverter;
         }
 

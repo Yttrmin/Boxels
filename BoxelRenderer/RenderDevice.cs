@@ -37,11 +37,14 @@ namespace BoxelRenderer
                 BackBufferSurface.DebugName = "BackBufferSurface::RenderDevice:ctor";
                 this.Device2D.SetRenderTarget(BackBufferSurface);
             }
-            this.D3DDevice.ImmediateContext1.Rasterizer.State = new RasterizerState1(this.D3DDevice, new RasterizerStateDescription1()
+            using (var State = new RasterizerState1(this.D3DDevice, new RasterizerStateDescription1()
                 {
                     CullMode = CullMode.Back,
                     FillMode = FillMode.Solid
-                });
+                }))
+            {
+                this.D3DDevice.ImmediateContext1.Rasterizer.State = State;
+            }
             this.ClearColor = new Color(119, 228, 255);
             this.Profiler = new GPUProfiler(this.D3DDevice);
         }
@@ -50,7 +53,7 @@ namespace BoxelRenderer
         {
             this.Device2D.Draw();
             this.Profiler.Render(this.Device2D);
-            this.Profiler.RecordTimeStamp(GPUProfiler.TimeStamp.Idle);
+            this.Profiler.RecordTimeStamp(GPUProfiler.TimeStamp.Draw2D);
             this.SwapChain.Present(1, PresentFlags.None);
             this.Profiler.RecordTimeStamp(GPUProfiler.TimeStamp.Present);
             this.ImmediateContext.ClearRenderTargetView(this.BackBuffer, this.ClearColor);
@@ -64,11 +67,9 @@ namespace BoxelRenderer
             System.Diagnostics.Trace.WriteLine(String.Format("Resizing from {0}x{1} to {2}x{3}", this.SwapChain.Description1.Width,
                 this.SwapChain.Description1.Height, NewWidth, NewHeight));
 
-            this.ReportLiveObjects();
             this.Device2D.SetRenderTarget(null);
             this.BackBuffer.Dispose();
             this.DepthBuffer.Dispose();
-            this.ReportLiveObjects();
 
             this.SwapChain.ResizeBuffers(2, NewWidth, NewHeight, Format.B8G8R8A8_UNorm, SwapChainFlags.None);
             using (var BackBufferTexture = this.SwapChain.GetBackBuffer<Texture2D>(0))
@@ -95,12 +96,17 @@ namespace BoxelRenderer
             Trace.WriteLine("------------------Start D3D11.1-----------------------------");
             this.PlatformUpdate = Environment.OSVersion.Version < new Version(6, 2);
             Trace.WriteLine("Creating DXGI1.1 Factory...");
-            var Factory1 = new Factory1();
-            Trace.WriteLine("Querying to DXGI1.2 Factory. Crashing here means no DXGI1.2 support, which isn't supported below Windows 7 Platform Update.");
-            this.Factory = Factory1.QueryInterface<Factory2>();
+            using (var Factory1 = new Factory1())
+            {
+                Trace.WriteLine("Querying to DXGI1.2 Factory. Crashing here means no DXGI1.2 support, which isn't supported below Windows 7 Platform Update.");
+                this.Factory = Factory1.QueryInterface<Factory2>();
+            }
             Trace.WriteLine("Success. The rest should likely work, and won't be done in multiple steps.");
             Trace.WriteLine("Creating DXGI1.2 Adapter (from DXGI1.1)...");
-            this.Adapter = this.Factory.GetAdapter1(0).QueryInterface<Adapter2>();
+            using(var Adapter1 = this.Factory.GetAdapter1(0))
+            {
+                this.Adapter = Adapter1.QueryInterface<Adapter2>();
+            }
             Trace.WriteLine("Success. Creating Direct3D11.1 Device (from Direct3D11)...");
             var SwapDesc = new SwapChainDescription1()
                 {
@@ -126,8 +132,11 @@ namespace BoxelRenderer
 #if DEBUG
             Flags |= this.PlatformUpdate ? DeviceCreationFlags.None : DeviceCreationFlags.Debug;
 #endif
-            this.D3DDevice = new SharpDX.Direct3D11.Device(this.Adapter, Flags)
-                .QueryInterface<SharpDX.Direct3D11.Device1>();
+            using(var Device0 = new SharpDX.Direct3D11.Device(this.Adapter, Flags))
+            {
+                this.D3DDevice = Device0.QueryInterface<SharpDX.Direct3D11.Device1>();
+                Device0.ImmediateContext.Dispose();
+            }
             this.CreateDebugDevice();
             this.D3DDevice.DebugName = "D3DDevice";
             this.ImmediateContext = this.D3DDevice.ImmediateContext1;
@@ -241,6 +250,8 @@ namespace BoxelRenderer
         private void Dispose(bool Disposing)
         {
             Trace.WriteLine("Disposing RenderDevice...");
+            this.ImmediateContext.ClearState();
+            this.ImmediateContext.Flush();
             this.ImmediateContext.Dispose();
             this.Adapter.Dispose();
             this.Factory.Dispose();
@@ -253,6 +264,7 @@ namespace BoxelRenderer
             if (Disposing)
             {
                 this.Device2D.Dispose();
+                this.Profiler.Dispose();
                 GC.SuppressFinalize(this);
             }
         }

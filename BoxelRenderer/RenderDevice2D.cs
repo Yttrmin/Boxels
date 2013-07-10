@@ -23,6 +23,8 @@ namespace BoxelRenderer
             private SolidColorBrush DefaultBrush;
             private TextFormat DefaultFont;
             public ImagingFactory2 Factory { get; private set; }
+            public int Width { get { return this.Context.PixelSize.Width; } }
+            public int Height { get { return this.Context.PixelSize.Height; } }
 
             public RenderDevice2D(SharpDX.DXGI.Device2 DXGIDevice)
             {
@@ -40,14 +42,17 @@ namespace BoxelRenderer
                 this.Factory = new ImagingFactory2();
                 Trace.WriteLine("Done.");
                 Trace.WriteLine("Initializing DirectWrite...");
-                this.DWriteFactory = new SharpDX.DirectWrite.Factory(SharpDX.DirectWrite.FactoryType.Shared).QueryInterface<SharpDX.DirectWrite.Factory1>();
-                this.DefaultFont = new TextFormat(this.DWriteFactory, "Consolas", 36);
+                using(var OriginalFactory = new SharpDX.DirectWrite.Factory(SharpDX.DirectWrite.FactoryType.Shared))
+                {
+                    this.DWriteFactory = OriginalFactory.QueryInterface<SharpDX.DirectWrite.Factory1>();
+                }
+                this.DefaultFont = new TextFormat(this.DWriteFactory, "Consolas", 12);
                 Trace.WriteLine("Done.");
             }
 
-            public void SaveTexture2DToFile(string FileName, SharpDX.Direct3D11.Texture2D Texture)
+            public void SaveSurfaceToFile(string FileName, SharpDX.DXGI.Surface2 Surface)
             {
-                var Bitmap = new Bitmap1(this.Context, Texture.QueryInterface<SharpDX.DXGI.Surface2>());
+                var Bitmap = new Bitmap1(this.Context, Surface);
                 var BitmapEncoder = new BitmapEncoder(Factory, ContainerFormatGuids.Png);
                 using (var File = new FileStream(FileName, FileMode.Create, FileAccess.Write))
                 {
@@ -80,15 +85,19 @@ namespace BoxelRenderer
                 }
             }
 
-            public void DrawText(string Text, RectangleF Position)
+            public void DrawText(string Text, RectangleF Position, Color TextColor)
             {
+                var OldColor = this.DefaultBrush.Color;
+                this.DefaultBrush.Color = TextColor;
                 this.Context.BeginDraw();
                 this.Context.DrawText(Text, this.DefaultFont, Position, this.DefaultBrush);
                 this.Context.EndDraw();
+                this.DefaultBrush.Color = OldColor;
             }
 
             public void Draw()
             {
+                return;
                 var SourceEffect = new Turbulence(this.Context);
                 var BlurEffect = new DirectionalBlur(this.Context);
                 BlurEffect.SetInputEffect(0, SourceEffect);
@@ -99,7 +108,11 @@ namespace BoxelRenderer
                 this.Context.BeginDraw();
                 //this.Context.Clear(Color.HotPink);
                 this.Context.DrawImage(BlurEffect);
-                this.Context.DrawEllipse(new Ellipse(new Vector2(100, 100), 200, 300), this.DefaultBrush);
+                for (int i = 0; i < 15; i++)
+                {
+                    this.DefaultBrush.Color = R.NextColor();
+                    this.Context.DrawEllipse(new Ellipse(new Vector2(R.NextFloat(0, Width), R.NextFloat(0, Height)), R.NextFloat(0, Width), R.NextFloat(0, Width)), this.DefaultBrush);
+                }
                 this.Context.EndDraw();
             }
 

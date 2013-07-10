@@ -22,7 +22,7 @@ namespace BoxelRenderer
 
     }
 
-    public class GPUProfiler
+    public class GPUProfiler : IDisposable
     {
         public enum TimeStamp
         {
@@ -34,7 +34,7 @@ namespace BoxelRenderer
             DrawTerrain,
             Present,
             PipelineInformation,
-            Idle,
+            Draw2D,
         }
         public struct Stats
         {
@@ -44,14 +44,16 @@ namespace BoxelRenderer
             public float PerFrameBufferTime;
             public float Terrain;
             public float Clear;
+            public float Draw2DTime;
+            public float FrameRate;
+            public float CPUTime;
             public long PrimitivesSent;
             public long PrimitivesRendererd;
-            public long IdleByPresent;
 
             public override string ToString()
             {
-                return String.Format("GPU frame: {0}ms  Pre-Draw: {4}ms  PerFrameCBuffer: {5}ms  TerrainDraw: {1}ms  PresentTime: {2}ms  ClearTime: {3}ms | PrimsSent: {6}  PrimsRendered: {7} | IdleByPresent: {8}", 
-                    FrameTime, Terrain, Present, Clear, IdleTime, PerFrameBufferTime, PrimitivesSent, PrimitivesRendererd, IdleByPresent);
+                return String.Format("GPU frame: {0}ms  Pre-Draw: {4}ms  PerFrameCBuffer: {5}ms  TerrainDraw: {1}ms  Draw2D: {8}ms  PresentTime: {2}ms  ClearTime: {3}ms | PrimsSent: {6}  PrimsRendered: {7}", 
+                    FrameTime, Terrain, Present, Clear, IdleTime, PerFrameBufferTime, PrimitivesSent, PrimitivesRendererd, Draw2DTime);
             }
         }
         private Device1 Device;
@@ -67,6 +69,7 @@ namespace BoxelRenderer
         private bool PendingCalculation;
         private int FreeQueryIndex;
         private int Stalls;
+        private const bool TraceStats = true;
 
         public GPUProfiler(Device1 Device)
         {
@@ -94,16 +97,6 @@ namespace BoxelRenderer
             this.Queries[TimeStamp.PipelineInformation][1] = new Query(this.Device, QueryDesc);
             this.Queries[TimeStamp.PipelineInformation][0].DebugName = TimeStamp.PipelineInformation.ToString() + "_0";
             this.Queries[TimeStamp.PipelineInformation][0].DebugName = TimeStamp.PipelineInformation.ToString() + "_1";
-            QueryDesc = new QueryDescription()
-            {
-                Type = QueryType.Event,
-                Flags = QueryFlags.None
-            };
-            this.Queries[TimeStamp.Idle] = new Query[2];
-            this.Queries[TimeStamp.Idle][0] = new Query(this.Device, QueryDesc);
-            this.Queries[TimeStamp.Idle][1] = new Query(this.Device, QueryDesc);
-            this.Queries[TimeStamp.Idle][0].DebugName = TimeStamp.Idle.ToString() + "_0";
-            this.Queries[TimeStamp.Idle][0].DebugName = TimeStamp.Idle.ToString() + "_1";
             QueryDesc = new QueryDescription()
             {
                 Type = QueryType.Timestamp,
@@ -153,42 +146,45 @@ namespace BoxelRenderer
             var Elapsed = (double)this.Timer.ElapsedTicks / (double)Stopwatch.Frequency;
             if (Elapsed >= 1.0f)
             {
-                this.PrintStats(Elapsed);
+                this.CommitStats(Elapsed);
                 this.Timer.Reset();
             }
         }
 
         public void Render(BoxelRenderer.RenderDevice.RenderDevice2D RenderDevice)
         {
-            var FPSRect = new RectangleF(0, 0, 200, 200);
-            RenderDevice.DrawText(this.PreviousStats.FrameTime.ToString(), FPSRect);
+            var Builder = new StringBuilder();
+            Builder.AppendLine(String.Format("FPS: {0:00.000}", this.PreviousStats.FrameRate));
+            Builder.AppendLine(String.Format("CPU Time: {0:0.000}ms", this.PreviousStats.CPUTime));
+            Builder.AppendLine(String.Format("GPU Time: {0:0.000}ms", this.PreviousStats.FrameTime));
+            Builder.AppendLine(String.Format("  PreDraw: {0:0.000}ms", this.PreviousStats.IdleTime));
+            Builder.AppendLine(String.Format("  CBuffer: {0:0.000}ms", this.PreviousStats.PerFrameBufferTime));
+            Builder.AppendLine(String.Format("  Terrain: {0:0.000}ms", this.PreviousStats.Terrain));
+            Builder.AppendLine(String.Format("  2D: {0:0.000}ms", this.PreviousStats.Draw2DTime));
+            Builder.AppendLine(String.Format("  Present: {0:0.000}ms", this.PreviousStats.Present));
+            Builder.AppendLine(String.Format("  Clear: {0:0.000}ms", this.PreviousStats.Clear));
+            var Rect = new RectangleF(RenderDevice.Width - 140, 0, 140, 400);
+            RenderDevice.DrawText(Builder.ToString(), Rect, Color.Green);
+            if (TraceStats && this.FrameCount == 1)
+                Trace.WriteLine(Builder.ToString());
         }
 
-        private void PrintStats(double Elapsed)
+        private void CommitStats(double Elapsed)
         {
-            var Builder = new StringBuilder();
-            Builder.AppendFormat("(F{2}) FPS: {0} CPU frame: {1}ms  ", this.FrameCount / Elapsed, this.TotalCPUDelta / this.FrameCount * 1000, this.TotalFrameCount);
-            if (this.Disjoint)
+            PreviousStats = new Stats()
             {
-                Builder.Append("GPU timings disjoint, data unavailable.");
-            }
-            else
-            {
-                PreviousStats = new Stats()
-                {
-                    Clear = this.AverageStats.Clear / this.FrameCount,
-                    FrameTime = this.AverageStats.FrameTime / this.FrameCount,
-                    IdleTime = this.AverageStats.IdleTime / this.FrameCount,
-                    PerFrameBufferTime = this.AverageStats.PerFrameBufferTime / this.FrameCount,
-                    Present = this.AverageStats.Present / this.FrameCount,
-                    Terrain = this.AverageStats.Terrain / this.FrameCount,
-                    PrimitivesRendererd = this.AverageStats.PrimitivesRendererd / this.FrameCount,
-                    PrimitivesSent = this.AverageStats.PrimitivesSent / this.FrameCount,
-                };
-                Builder.Append(PreviousStats);
-            }
-            Builder.AppendFormat(" | QueryStalls: {0}", this.Stalls);
-            Trace.WriteLine(Builder.ToString());
+                FrameRate = this.FrameCount/(float)Elapsed,
+                CPUTime = (float)this.TotalCPUDelta / this.FrameCount*1000,
+                Clear = this.AverageStats.Clear / this.FrameCount,
+                FrameTime = this.AverageStats.FrameTime / this.FrameCount,
+                IdleTime = this.AverageStats.IdleTime / this.FrameCount,
+                PerFrameBufferTime = this.AverageStats.PerFrameBufferTime / this.FrameCount,
+                Present = this.AverageStats.Present / this.FrameCount,
+                Terrain = this.AverageStats.Terrain / this.FrameCount,
+                PrimitivesRendererd = this.AverageStats.PrimitivesRendererd / this.FrameCount,
+                PrimitivesSent = this.AverageStats.PrimitivesSent / this.FrameCount,
+                Draw2DTime = this.AverageStats.Draw2DTime / this.FrameCount
+            };
             this.AverageStats = new Stats();
             this.TotalCPUDelta = 0;
             this.FrameCount = 0;
@@ -209,9 +205,8 @@ namespace BoxelRenderer
                 return;
             }
 
-            long BeginFrame, EndFrame, Terrain, Present, Idle, Buffer;
+            long BeginFrame, EndFrame, Terrain, Present, Idle, Buffer, Draw2D;
             QueryDataPipelineStatistics PipelineStats;
-            bool WasIdle;
             bool Success = true;
             Success &= this.Immediate.GetData(this.GetQueryObject(TimeStamp.BeginFrame), AsynchronousFlags.None, out BeginFrame);
             Success &= this.Immediate.GetData(this.GetQueryObject(TimeStamp.EndFrame), AsynchronousFlags.None, out EndFrame);
@@ -219,6 +214,7 @@ namespace BoxelRenderer
             Success &= this.Immediate.GetData(this.GetQueryObject(TimeStamp.Present), AsynchronousFlags.None, out Present);
             Success &= this.Immediate.GetData(this.GetQueryObject(TimeStamp.FrameIdle), AsynchronousFlags.None, out Idle);
             Success &= this.Immediate.GetData(this.GetQueryObject(TimeStamp.PerFrameBufferUpdate), AsynchronousFlags.None, out Buffer);
+            Success &= this.Immediate.GetData(this.GetQueryObject(TimeStamp.Draw2D), AsynchronousFlags.None, out Draw2D);
             if(!Success)
                 throw new InvalidOperationException("Timestamp queries not ready.");
             this.AverageStats = new Stats()
@@ -229,13 +225,11 @@ namespace BoxelRenderer
                 Terrain = (float)(Terrain - Buffer) / (float)DisjointData.Frequency * 1000.0f + AverageStats.Terrain,
                 Present = (float)(Present - Terrain) / (float)DisjointData.Frequency * 1000.0f + AverageStats.Present,
                 Clear = (float)(EndFrame - Present) / (float)DisjointData.Frequency * 1000.0f + AverageStats.Clear,
+                Draw2DTime = (float)(Draw2D - Terrain) / (float)DisjointData.Frequency * 1000.0f + AverageStats.Draw2DTime,
             };
             this.WaitForPipelineData(out PipelineStats);
             this.AverageStats.PrimitivesRendererd = PipelineStats.CPrimitiveCount;
             this.AverageStats.PrimitivesSent = PipelineStats.IAPrimitiveCount;
-            this.WaitForEvent(out WasIdle);
-            if (WasIdle)
-                this.AverageStats.IdleByPresent++;
         }
 
         private void ToggleFreeQueries()
@@ -258,16 +252,33 @@ namespace BoxelRenderer
                 this.Stalls++;
         }
 
-        private void WaitForEvent(out bool Result)
-        {
-            long LResult;
-            while (this.Immediate.GetData(this.GetQueryObject(TimeStamp.Idle), AsynchronousFlags.None, out LResult) == false) ;
-            Result = Convert.ToBoolean(LResult);
-        }
-
         private Query GetQueryObject(TimeStamp Stamp)
         {
             return this.Queries[Stamp][this.FreeQueryIndex];
+        }
+
+        private void Dispose(bool Disposing)
+        {
+            Trace.WriteLine(this.PreviousStats.ToString());
+            foreach (var QueryArray in this.Queries.Values)
+            {
+                QueryArray[0].Dispose();
+                QueryArray[1].Dispose();
+            }
+            if (Disposing)
+            {
+                GC.SuppressFinalize(this);
+            }
+        }
+
+        public void Dispose()
+        {
+            this.Dispose(true);
+        }
+
+        ~GPUProfiler()
+        {
+            this.Dispose(false);
         }
     }
 }

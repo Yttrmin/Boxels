@@ -25,8 +25,8 @@ namespace ProjectBoxelGame
         private readonly Input Input;
         private bool MouseEnabled;
         private bool Resized;
-        private const int Width = 640;
-        private const int Height = 480;
+        private const int Width = 1280;
+        private const int Height = 1024;
 
         public Game(VBL.vbl Level)
         {
@@ -110,6 +110,7 @@ namespace ProjectBoxelGame
             if (Disposing)
             {
                 this.RenderDevice.Dispose();
+                this.Window.Dispose();
                 GC.SuppressFinalize(this);
             }
         }

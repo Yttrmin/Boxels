@@ -22,7 +22,7 @@ namespace BoxelRenderer
 	{
 		private const int BoxelSize = 2;
 
-        public CubeNoGSRenderer(RenderDevice Device, BoxelTypes<ICubeBoxelType> Types)
+		public CubeNoGSRenderer(RenderDevice Device, BoxelTypes<ICubeBoxelType> Types)
 			: base("CubeShaders.hlsl", "VShaderTextured", null, "PShaderTextured", PrimitiveTopology.TriangleList, Device, Types)
 		{
 			
@@ -41,20 +41,30 @@ namespace BoxelRenderer
 			InstanceBinding = new VertexBufferBinding();
 			IndexBuffer = null;
 			InstanceCount = 0;
-			var Enumerable = Boxels as IBoxel[] ?? Boxels.ToArray();
+			var Enumerable = this.GetBoxelArray(Boxels);
+			var CullResult = BoxelHelpers.OcclusionCull(Enumerable);
+			System.Diagnostics.Trace.WriteLine(String.Format("{0} {1}", Enumerable.Length, CullResult.Count()));
 			var Random = new Random();
-			VertexCount = Enumerable.Length * Cube.NonIndexedVertexCount;
-			using (var VertexStream = new DataStream(VertexCount * VertexSizeInBytes, false, true))
+			using (var Buffer = new DataBuffer((Enumerable.Length * SmartCube.MaxDrawnVertexCount) * VertexSizeInBytes))
 			{
+				IntPtr CurrentPosition = Buffer.DataPointer;
+				int FinalSize = 0;
 				foreach (var Boxel in Enumerable)
 				{
-					new Cube(new Vector3(Boxel.Position.X * BoxelSize,
-						Boxel.Position.Y * BoxelSize, Boxel.Position.Z * BoxelSize), BoxelSize)
-						.WriteNonIndexedWithTypedUVs(this, Boxel.Type, VertexStream);
+					FinalSize += new SmartCube(new Vector3(Boxel.Position.X, Boxel.Position.Y, Boxel.Position.Z),
+						BoxelSize, BoxelHelpers.Side.PosY, (int)this.GetTextureIndexByType(Axis.PosY, Boxel.Type)).Write(ref CurrentPosition);
 				}
-                VertexStream.Position = 0;
-				VertexBuffer = new Buffer(Device, VertexStream, (int)VertexStream.Length, ResourceUsage.Immutable,
-											   BindFlags.VertexBuffer, CpuAccessFlags.None, ResourceOptionFlags.None, 0);
+				VertexCount = FinalSize / Vertex.SizeInBytes;
+				System.Diagnostics.Trace.WriteLine(String.Format("Final vertex count: {0}", FinalSize / Vertex.SizeInBytes));
+				VertexBuffer = new Buffer(Device, Buffer.DataPointer, new BufferDescription()
+				{
+					BindFlags=BindFlags.VertexBuffer,
+					CpuAccessFlags=CpuAccessFlags.None,
+					OptionFlags=ResourceOptionFlags.None,
+					SizeInBytes=FinalSize,
+					StructureByteStride=0,
+					Usage=ResourceUsage.Immutable
+				});
 				VertexBuffer.DebugName = "BoxelsVertexBuffer";
 				Binding = new VertexBufferBinding(VertexBuffer, VertexSizeInBytes, 0);
 			}
@@ -68,6 +78,13 @@ namespace BoxelRenderer
 					new InputElement("TEXCOORD", 0, Format.R32G32B32_Float, 12, 0, InputClassification.PerVertexData, 0),
 				};
 			VertexSizeInBytes = Vector3.SizeInBytes * 2;
+		}
+
+		//@TODO - Remove me. Just for timing.
+		[Timer]
+		private IBoxel[] GetBoxelArray(IEnumerable<IBoxel> Boxels)
+		{
+			return Boxels as IBoxel[] ?? Boxels.ToArray();
 		}
 	}
 }

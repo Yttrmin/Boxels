@@ -41,8 +41,12 @@ namespace BoxelRenderer
 
         public void Load(string Path)
         {
-            this.TextureMap[Path] = TextureLoader.CreateTexture2DFromBitmap(this.Device, 
-                        TextureLoader.LoadBitmap(this.ImagingFactory, Path), true);
+            if (this.TextureMap.ContainsKey(Path))
+                return;
+            using(var Source = TextureLoader.LoadBitmap(this.ImagingFactory, Path))
+            {
+                this.TextureMap[Path] = TextureLoader.CreateTexture2DFromBitmap(this.Device, Source, true);
+            }
             this.TextureMap[Path].DebugName = Path;
             if (this.TextureMap.Count == 1)
             {
@@ -69,29 +73,44 @@ namespace BoxelRenderer
                 this.TexturesByIndex.Add(Texture);
                 i++;
             }
-            var FinalTexture = new Texture2D(this.Device, new Texture2DDescription()
+            ShaderResourceView FinalTextureView;
+            using (var FinalTexture = new Texture2D(this.Device, new Texture2DDescription()
                 {
                     ArraySize = TextureCount,
-                    BindFlags=BindFlags.ShaderResource,
-                    CpuAccessFlags=CpuAccessFlags.None,
-                    Format=SharpDX.DXGI.Format.R8G8B8A8_UNorm,
-                    OptionFlags=ResourceOptionFlags.None,
-                    Usage=ResourceUsage.Immutable,
-                    Width=this.Width,
-                    Height=this.Height,
-                    MipLevels=1,
-                    SampleDescription=new SharpDX.DXGI.SampleDescription(1,0),
-                }, DataBoxes);
+                    BindFlags = BindFlags.ShaderResource,
+                    CpuAccessFlags = CpuAccessFlags.None,
+                    Format = SharpDX.DXGI.Format.R8G8B8A8_UNorm,
+                    OptionFlags = ResourceOptionFlags.None,
+                    Usage = ResourceUsage.Immutable,
+                    Width = this.Width,
+                    Height = this.Height,
+                    MipLevels = 1,
+                    SampleDescription = new SharpDX.DXGI.SampleDescription(1, 0),
+                }, DataBoxes))
+            {
+                FinalTextureView = new ShaderResourceView(this.Device, FinalTexture);
+            }
             foreach (var Texture in this.TextureMap.Values)
             {
                 Context.UnmapSubresource(Texture, 0);
             }
-            return new ShaderResourceView(this.Device, FinalTexture);
+            return FinalTextureView;
         }
 
         private void Dispose(bool Disposing)
         {
-            throw new NotImplementedException();
+            foreach (var Texture in this.TextureMap.Values)
+            {
+                Texture.Dispose();
+            }
+            foreach (var Texture in this.TexturesByIndex)
+            {
+                Texture.Dispose();
+            }
+            if (Disposing)
+            {
+                GC.SuppressFinalize(this);
+            }
         }
 
         public void Dispose()

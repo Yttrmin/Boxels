@@ -12,7 +12,7 @@ using Buffer = SharpDX.Direct3D11.Buffer;
 
 namespace BoxelLib
 {
-    public class BoxelManager
+    public class BoxelManager : IDisposable
     {
         public struct BoxelManagerSettings
         {
@@ -98,6 +98,7 @@ namespace BoxelLib
 
         public void Add(IBoxel Boxel, Int3 Position)
         {
+            Boxel.Container = this.Boxels;
             this.Boxels.Add(Boxel, Position);
             this.IsDirty = true;
         }
@@ -158,6 +159,25 @@ namespace BoxelLib
             var WorldViewProj = World * RenderCamera.View * RenderCamera.Projection;
             PerFramePointer.Write(Matrix.Transpose(WorldViewProj));
             this.RenderDevice.D3DDevice.ImmediateContext1.UnmapSubresource(this.PerFrameData, 0);
+        }
+
+        private void Dispose(bool Disposing)
+        {
+            this.Renderer.Dispose();
+            if (Disposing)
+            {
+                GC.SuppressFinalize(this);
+            }
+        }
+
+        public void Dispose()
+        {
+            this.Dispose(true);
+        }
+
+        ~BoxelManager()
+        {
+            this.Dispose(false);
         }
     }
 }

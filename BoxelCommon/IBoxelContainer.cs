@@ -10,6 +10,9 @@ using SharpDX;
 
 namespace BoxelCommon
 {
+    /// <summary>
+    /// The highest-level container of a world's boxels.
+    /// </summary>
     public interface IBoxelContainer
     {
         IBoxel AtOrDefault(Int3 Position);
@@ -20,8 +23,12 @@ namespace BoxelCommon
         void Compact();
     }
 
+    /// <summary>
+    /// A container of boxels.
+    /// </summary>
     public interface IChunk
     {
+        int Count { get; }
 
     }
 }
