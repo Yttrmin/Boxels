@@ -15,6 +15,7 @@ using BoxelCommon;
 
 namespace BoxelRenderer
 {
+    [Obsolete]
     public sealed class CubeIndexedInstancedRenderer : BaseRenderer
     {
         private const int BoxelSize = 2;

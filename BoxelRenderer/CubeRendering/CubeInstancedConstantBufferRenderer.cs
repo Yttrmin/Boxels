@@ -12,6 +12,7 @@ using BoxelCommon;
 
 namespace BoxelRenderer
 {
+    [Obsolete]
     public class CubeInstancedConstantBufferRenderer : BaseRenderer
     {
         private Buffer InstancePositionsBuffer;

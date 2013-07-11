@@ -72,86 +72,83 @@ namespace BoxelRenderer
     public struct SmartCube
     {
         private static IDictionary<BoxelHelpers.Side, Face> FaceTemplates;
-        private readonly Face[] Faces;
+        private readonly IList<Face> Faces;
         public const int MaxDrawnVertexCount = Face.DrawnVertexCount * 6;
 
         static SmartCube()
         {
             FaceTemplates = new Dictionary<BoxelHelpers.Side, Face>(6);
+            // Works.
             FaceTemplates[BoxelHelpers.Side.NegX] = new Face(
-                new Vertex(new Vector3(-1, 1, -1), new Vector3(0, 0, 0)),
                 new Vertex(new Vector3(-1, 1, 1), new Vector3(0, 0, 0)),
-                new Vertex(new Vector3(-1, -1, -1), new Vector3(0, 0, 0)),
-                new Vertex(new Vector3(-1, -1, 1), new Vector3(0, 0, 0)));
+                new Vertex(new Vector3(-1, 1, -1), new Vector3(1, 0, 0)),
+                new Vertex(new Vector3(-1, -1, 1), new Vector3(0, 1, 0)),
+                new Vertex(new Vector3(-1, -1, -1), new Vector3(1, 1, 0)));
+            // Works.
             FaceTemplates[BoxelHelpers.Side.PosX] = new Face(
-                new Vertex(new Vector3(1, 1, -1), new Vector3(0, 0, 0)),
-                new Vertex(new Vector3(1, 1, 1), new Vector3(0, 0, 0)),
-                new Vertex(new Vector3(1, -1, -1), new Vector3(0, 0, 0)),
-                new Vertex(new Vector3(1, -1, 1), new Vector3(0, 0, 0)));
+            new Vertex(new Vector3(1, 1, -1), new Vector3(0, 0, 0)),
+                new Vertex(new Vector3(1, 1, 1), new Vector3(1, 0, 0)),
+                new Vertex(new Vector3(1, -1, -1), new Vector3(0, 1, 0)),
+                new Vertex(new Vector3(1, -1, 1), new Vector3(1, 1, 0)));
+            // Works.
             FaceTemplates[BoxelHelpers.Side.NegY] = new Face(
                 new Vertex(new Vector3(-1, -1, -1), new Vector3(0, 0, 0)),
-                new Vertex(new Vector3(1, -1, -1), new Vector3(0, 0, 0)),
-                new Vertex(new Vector3(1, -1, 1), new Vector3(0, 0, 0)),
-                new Vertex(new Vector3(-1, -1, 1), new Vector3(0, 0, 0)));
+                new Vertex(new Vector3(1, -1, -1), new Vector3(1, 0, 0)),
+                new Vertex(new Vector3(-1, -1, 1), new Vector3(0, 1, 0)),
+                new Vertex(new Vector3(1, -1, 1), new Vector3(1, 1, 0)));
+            // Works.
             FaceTemplates[BoxelHelpers.Side.PosY] = new Face(
                 new Vertex(new Vector3(-1, 1, 1), new Vector3(0, 0, 0)),
-                new Vertex(new Vector3(1, 1, 1), new Vector3(0, 0, 0)),
-                new Vertex(new Vector3(-1, 1, -1), new Vector3(0, 0, 0)),
-                new Vertex(new Vector3(1, 1, -1), new Vector3(0, 0, 0)));
-            //@TODO - Left vs Right handed coordinates?
+                new Vertex(new Vector3(1, 1, 1), new Vector3(1, 0, 0)),
+                new Vertex(new Vector3(-1, 1, -1), new Vector3(0, 1, 0)),
+                new Vertex(new Vector3(1, 1, -1), new Vector3(1, 1, 0)));
+            // Works.
             FaceTemplates[BoxelHelpers.Side.NegZ] = new Face(
-                new Vertex(new Vector3(1, 1, -1), new Vector3(0, 0, 0)),
                 new Vertex(new Vector3(-1, 1, -1), new Vector3(0, 0, 0)),
-                new Vertex(new Vector3(-1, -1, -1), new Vector3(0, 0, 0)),
-                new Vertex(new Vector3(1, -1, -1), new Vector3(0, 0, 0)));
+                new Vertex(new Vector3(1, 1, -1), new Vector3(1, 0, 0)),
+                new Vertex(new Vector3(-1, -1, -1), new Vector3(0, 1, 0)),
+                new Vertex(new Vector3(1, -1, -1), new Vector3(1, 1, 0)));
             FaceTemplates[BoxelHelpers.Side.PosZ] = new Face(
-                new Vertex(new Vector3(1, -1, 1), new Vector3(0, 0, 0)),
-                new Vertex(new Vector3(1, 1, 1), new Vector3(0, 0, 0)),
-                new Vertex(new Vector3(-1, 1, 1), new Vector3(0, 0, 0)),
-                new Vertex(new Vector3(-1, -1, 1), new Vector3(0, 0, 0)));
+                new Vertex(new Vector3(-1, -1, 1), new Vector3(0, 0, 0)),
+                new Vertex(new Vector3(1, -1, 1), new Vector3(1, 0, 0)),
+                new Vertex(new Vector3(-1, 1, 1), new Vector3(0, 1, 0)),
+                new Vertex(new Vector3(1, 1, 1), new Vector3(1, 1, 0)));
         }
 
         public SmartCube(Vector3 Position, int BoxelSize, BoxelHelpers.Side Sides, int TextureIndex)
         {
-            this.Faces = new Face[BoxelHelpers.NumberOfSides(Sides)];
-            var Index = 0;
+            this.Faces = new List<Face>(6);
             var SideKey = BoxelHelpers.Side.None;
             var TextureOffset = new Vector3(0, 0, TextureIndex);
             //@TODO - Roll.
             if (Sides.HasFlag(BoxelHelpers.Side.NegX))
             {
-                this.Faces[Index] = FaceTemplates[BoxelHelpers.Side.NegX].Offset(Position, TextureOffset);
-                Index++;
+                this.Faces.Add(FaceTemplates[BoxelHelpers.Side.NegX].Offset(Position, TextureOffset));
                 SideKey |= BoxelHelpers.Side.NegX;
             }
             if (Sides.HasFlag(BoxelHelpers.Side.PosX))
             {
-                this.Faces[Index] = FaceTemplates[BoxelHelpers.Side.PosX].Offset(Position, TextureOffset);
-                Index++;
+                this.Faces.Add(FaceTemplates[BoxelHelpers.Side.PosX].Offset(Position, TextureOffset));
                 SideKey |= BoxelHelpers.Side.PosX;
             }
             if (Sides.HasFlag(BoxelHelpers.Side.NegY))
             {
-                this.Faces[Index] = FaceTemplates[BoxelHelpers.Side.NegY].Offset(Position, TextureOffset);
-                Index++;
+                this.Faces.Add(FaceTemplates[BoxelHelpers.Side.NegY].Offset(Position, TextureOffset));
                 SideKey |= BoxelHelpers.Side.NegY;
             }
             if (Sides.HasFlag(BoxelHelpers.Side.PosY))
             {
-                this.Faces[Index] = FaceTemplates[BoxelHelpers.Side.PosY].Offset(Position, TextureOffset);
-                Index++;
+                this.Faces.Add(FaceTemplates[BoxelHelpers.Side.PosY].Offset(Position, TextureOffset));
                 SideKey |= BoxelHelpers.Side.PosY;
             }
             if (Sides.HasFlag(BoxelHelpers.Side.NegZ))
             {
-                this.Faces[Index] = FaceTemplates[BoxelHelpers.Side.NegZ].Offset(Position, TextureOffset);
-                Index++;
+                this.Faces.Add(FaceTemplates[BoxelHelpers.Side.NegZ].Offset(Position, TextureOffset));
                 SideKey |= BoxelHelpers.Side.NegZ;
             }
             if (Sides.HasFlag(BoxelHelpers.Side.PosZ))
             {
-                this.Faces[Index] = FaceTemplates[BoxelHelpers.Side.PosZ].Offset(Position, TextureOffset);
-                Index++;
+                this.Faces.Add(FaceTemplates[BoxelHelpers.Side.PosZ].Offset(Position, TextureOffset));
                 SideKey |= BoxelHelpers.Side.PosZ;
             }
         }
@@ -159,7 +156,7 @@ namespace BoxelRenderer
         public int Write(ref IntPtr Pointer)
         {
             int i;
-            for (i = 0; i < this.Faces.Length; i++)
+            for (i = 0; i < this.Faces.Count; i++)
             {
                 this.Faces[i].Write(ref Pointer);
             }
