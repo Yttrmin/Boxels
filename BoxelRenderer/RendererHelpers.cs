@@ -38,13 +38,19 @@ namespace BoxelRenderer
 
 	public struct Face
 	{
-		private static Vertex[] NewVertices;
+		private static Vertex[][] NewVertices;
+		private static int Index;
 		public readonly Vertex[] Vertices;
 		public const int DrawnVertexCount = 6;
 
 		static Face()
 		{
-			NewVertices = new Vertex[4];
+			NewVertices = new Vertex[6][];
+			for (var i = 0; i < NewVertices.Length; i++)
+			{
+				NewVertices[i] = new Vertex[4];
+			}
+			Index = 0;
 		}
 
 		public Face(params Vertex[] Vertices)
@@ -59,11 +65,11 @@ namespace BoxelRenderer
 		public Face Offset(Vector3 Offset, Vector3 TextureOffset)
 		{
 			//var NewVertices = new Vertex[this.Vertices.Length];
-			for (var i = 0; i < NewVertices.Length; i++)
+			for (var i = 0; i < NewVertices[Index].Length; i++)
 			{
-				NewVertices[i] = this.Vertices[i].Offset(Offset, TextureOffset);
+				NewVertices[Index][i] = this.Vertices[i].Offset(Offset, TextureOffset);
 			}
-			return new Face(NewVertices);
+			return new Face(NewVertices[Index++]);
 		}
 
 		public void Write(ref IntPtr Pointer)
@@ -72,6 +78,7 @@ namespace BoxelRenderer
 			Pointer = Utilities.WriteAndPosition<Vertex>(Pointer, ref this.Vertices[2]);
 			Pointer = Utilities.WriteAndPosition<Vertex>(Pointer, ref this.Vertices[1]);
 			Pointer = Utilities.WriteAndPosition<Vertex>(Pointer, ref this.Vertices[3]);
+			Index = 0;
 		}
 	}
 
