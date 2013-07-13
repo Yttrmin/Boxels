@@ -66,12 +66,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CubeRendering\BaseRenderer.cs" />
-    <Compile Include="CubeRendering\CubeIndexedInstancedRenderer.cs" />
-    <Compile Include="CubeRendering\CubeIndexedRenderer.cs" />
-    <Compile Include="CubeRendering\CubeInstancedConstantBufferRenderer.cs" />
-    <Compile Include="CubeRendering\CubeInstancedRenderer.cs" />
     <Compile Include="CubeRendering\CubeNoGSRenderer.cs" />
-    <Compile Include="CubeRendering\CubeRenderer.cs" />
     <Compile Include="CubeRendering\CubeTypeManager.cs" />
     <Compile Include="GPUProfiler.cs" />
     <Compile Include="MarchingCubesRenderer.cs" />
@@ -115,7 +110,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UpdateFileVersion="True" BuildVersion_BuildVersioningStyle="None.None.None.Increment" />
+      <UserProperties BuildVersion_BuildVersioningStyle="None.None.None.Increment" BuildVersion_UpdateFileVersion="True" />
     </VisualStudio>
   </ProjectExtensions>
   <Import Project="..\packages\PostSharp.3.0.30\tools\PostSharp.targets" Condition="Exists('..\packages\PostSharp.3.0.30\tools\PostSharp.targets')" />

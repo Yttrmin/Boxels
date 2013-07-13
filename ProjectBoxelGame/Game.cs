@@ -28,16 +28,20 @@ namespace ProjectBoxelGame
         private const int Width = 1280;
         private const int Height = 1024;
 
-        public Game(VBL.vbl Level)
+		private Game()
+		{
+			this.RegisterTick(this);
+			this.Window = new RenderForm("Project Boxel (Open PV Editor)");
+			this.Window.FormBorderStyle = FormBorderStyle.Sizable;
+			this.Window.MaximizeBox = true;
+			this.Window.ClientSize = new System.Drawing.Size(Width, Height);
+			this.Window.UserResized += (a, b) => { this.Resized = true; };
+			this.Camera = new BasicCamera(new Vector3(0, 10, 0), new Vector3(1, 0, 0), Width, Height);
+			this.RenderDevice = new RenderDevice(this.Window);
+		}
+
+        public Game(VBL.vbl Level) : this()
         {
-            this.RegisterTick(this);
-            this.Window = new RenderForm("Project Boxel (Open PV Editor)");
-            this.Window.FormBorderStyle = FormBorderStyle.Sizable;
-            this.Window.MaximizeBox = true;
-            this.Window.ClientSize = new System.Drawing.Size(Width, Height);
-            this.Window.UserResized += (a,b) => { this.Resized = true; };
-            this.Camera = new BasicCamera(new Vector3(0, 10, 0), new Vector3(1, 0, 0), Width, Height);
-            this.RenderDevice = new RenderDevice(this.Window);
             this.Manager = new BoxelManager(new BoxelManager.BoxelManagerSettings()
                 {
                     Width = Level.properties.width,
@@ -49,10 +53,20 @@ namespace ProjectBoxelGame
                 this.Manager.Add(new BasicBoxel(new Int3(Voxel.x, Voxel.y, Voxel.z), 1.0f, Voxel.id), 
                     new Int3(Voxel.x, Voxel.y, Voxel.z));
             }
+			Trace.WriteLine("Writing map data out to binary. Use this instead of VBL!");
+			this.Manager.Save("level_out.bin");
             this.Window.Show();
             this.MouseEnabled = true;
             this.Input = new Input(this.Window);
         }
+
+		public Game(IBoxelContainer Container) : this()
+		{
+			this.Manager = new BoxelManager(Container, this.RenderDevice, new PVTypeManager());
+			this.Window.Show();
+			this.MouseEnabled = true;
+			this.Input = new Input(this.Window);
+		}
 
         public void Tick(double DeltaTime)
         {

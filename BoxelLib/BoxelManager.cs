@@ -9,6 +9,8 @@ using BoxelRenderer;
 using SharpDX;
 using SharpDX.Direct3D11;
 using Buffer = SharpDX.Direct3D11.Buffer;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.IO;
 
 namespace BoxelLib
 {
@@ -46,55 +48,35 @@ namespace BoxelLib
         public int BoxelCount {
             get { return this.Boxels.Count; }
         }
-        public IEnumerable<IBoxel> AllBoxels { get { return this.Boxels.AllBoxels; } } 
+        public IEnumerable<IBoxel> AllBoxels { get { return this.Boxels.AllBoxels; } }
 
-        public BoxelManager(BoxelManagerSettings Settings, RenderDevice RenderDevice, BoxelTypes<ICubeBoxelType> Types)
+		private BoxelManager(BoxelTypes<ICubeBoxelType> Types, RenderDevice RenderDevice)
+		{
+			this.BoxelTypes = Types;
+			this.Renderer = new CubeNoGSRenderer(RenderDevice, this.BoxelTypes);
+			this.DrawDistance = 32;
+			this.RenderDevice = RenderDevice;
+			this.PerFrameData = new Buffer(RenderDevice.D3DDevice, Matrix.SizeInBytes, ResourceUsage.Dynamic,
+										   BindFlags.ConstantBuffer, CpuAccessFlags.Write, ResourceOptionFlags.None, 0);
+			this.RenderDevice.D3DDevice.ImmediateContext1.VertexShader.SetConstantBuffer(0, this.PerFrameData);
+			this.RenderDevice.D3DDevice.ImmediateContext1.GeometryShader.SetConstantBuffer(0, this.PerFrameData);
+			this.RenderDevice.D3DDevice.ImmediateContext1.PixelShader.SetConstantBuffer(0, this.PerFrameData);
+		}
+
+        public BoxelManager(BoxelManagerSettings Settings, RenderDevice RenderDevice, BoxelTypes<ICubeBoxelType> Types) : this(Types, RenderDevice)
         {
             if(Settings.UseChunks)
                 throw new NotImplementedException("Chunking not supported.");
             this.Settings = Settings;
             var LargestSide = Math.Max(Math.Max(Settings.Width, Settings.Height), Settings.Length);
-            this.BoxelTypes = Types;
             this.Boxels = new ConstantRandomContainer();
-            foreach (var Arg in Environment.GetCommandLineArgs())
-            {
-                if (Arg == "point")
-                {
-                    Trace.WriteLine("Using PointRenderer.");
-                    this.Renderer = new PointRenderer(RenderDevice, this.BoxelTypes);
-                    break;
-                }
-                else if (Arg == "cube")
-                {
-                    Trace.WriteLine("Using CubeRenderer.");
-                    this.Renderer = new CubeRenderer(RenderDevice, this.BoxelTypes);
-                    break;
-                }
-                else if (Arg == "cubenogs")
-                {
-                    Trace.WriteLine("Using CubeNoGSRenderer.");
-                    this.Renderer = new CubeNoGSRenderer(RenderDevice, this.BoxelTypes);
-                    break;
-                }
-                else if (Arg == "cubeii")
-                {
-                    Trace.WriteLine("Using CubeIIR");
-                    this.Renderer = new CubeIndexedInstancedRenderer(RenderDevice, this.BoxelTypes);
-                }
-            }
-            if (this.Renderer == null)
-            {
-                Trace.WriteLine("Using CubeNoGSRenderer by default.");
-                this.Renderer = new CubeNoGSRenderer(RenderDevice, this.BoxelTypes);
-            }
-            this.DrawDistance = 32;
-            this.RenderDevice = RenderDevice;
-            this.PerFrameData = new Buffer(RenderDevice.D3DDevice, Matrix.SizeInBytes, ResourceUsage.Dynamic,
-                                           BindFlags.ConstantBuffer, CpuAccessFlags.Write, ResourceOptionFlags.None, 0);
-            this.RenderDevice.D3DDevice.ImmediateContext1.VertexShader.SetConstantBuffer(0, this.PerFrameData);
-            this.RenderDevice.D3DDevice.ImmediateContext1.GeometryShader.SetConstantBuffer(0, this.PerFrameData);
-            this.RenderDevice.D3DDevice.ImmediateContext1.PixelShader.SetConstantBuffer(0, this.PerFrameData);
         }
+
+		public BoxelManager(IBoxelContainer Container, RenderDevice RenderDevice, BoxelTypes<ICubeBoxelType> Types)
+			: this(Types, RenderDevice)
+		{
+			this.Boxels = Container;
+		}
 
         public void Add(IBoxel Boxel, Int3 Position)
         {
@@ -140,6 +122,15 @@ namespace BoxelLib
             this.Renderer.Render(this.RenderDevice.D3DDevice.ImmediateContext1);
             this.RenderDevice.Render();
         }
+
+		[Timer]
+		public void Save(string Filename)
+		{
+			using (var SaveFile = File.Create(Filename))
+			{
+				this.Boxels.Save(SaveFile);
+			}
+		}
 
         private void SetupRenderer(BaseRenderer NewRenderer)
         {

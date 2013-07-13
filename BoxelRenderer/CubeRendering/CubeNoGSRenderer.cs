@@ -10,7 +10,6 @@ using SharpDX.Direct3D11;
 using Buffer = SharpDX.Direct3D11.Buffer;
 using Device1 = SharpDX.Direct3D11.Device1;
 using SharpDX.DXGI;
-using Cube = BoxelRenderer.RendererHelpers.Cube;
 using BoxelCommon;
 
 namespace BoxelRenderer
@@ -51,8 +50,9 @@ namespace BoxelRenderer
 				int FinalSize = 0;
 				foreach (var Boxel in BoxelHelpers.SideOcclusionCull(Enumerable))
 				{
-					FinalSize += new SmartCube(new Vector3(Boxel.Item1.Position.X * BoxelSize, Boxel.Item1.Position.Y * BoxelSize, Boxel.Item1.Position.Z * BoxelSize),
-						BoxelSize, Boxel.Item2, (int)this.GetTextureIndexByType(Axis.PosY, Boxel.Item1.Type)).Write(ref CurrentPosition);
+					FinalSize += new SmartCube(new Vector3(Boxel.Item1.Position.X * BoxelSize, Boxel.Item1.Position.Y * BoxelSize, 
+						Boxel.Item1.Position.Z * BoxelSize),
+						BoxelSize, Boxel.Item2, this, Boxel.Item1.Type).Write(ref CurrentPosition);
 				}
 				VertexCount = FinalSize / Vertex.SizeInBytes;
 				System.Diagnostics.Trace.WriteLine(String.Format("Final vertex count: {0}", FinalSize / Vertex.SizeInBytes));

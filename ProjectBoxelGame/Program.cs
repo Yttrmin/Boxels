@@ -25,13 +25,22 @@ namespace ProjectBoxelGame
             SetupOutputRedirects();
             Trace.WriteLine(String.Format("Project Boxel v{0}", FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location).FileVersion));
             Trace.WriteLine("Creating RenderForm...");
-            using (var Game = new Game(LoadVBL("test_map_big.vbl")))
+            using (var Game = new Game(LoadBoxels("level.bin")))
             {
                 Trace.WriteLine("Close render window to exit.");
                 Game.Run();
             }
             Trace.WriteLine(String.Format("Exiting normally at {0}", DateTime.Now.ToString()));
         }
+
+		[BoxelCommon.Timer]
+		private static IBoxelContainer LoadBoxels(string Filename)
+		{
+			using (var LoadFile = File.Open(Filename, FileMode.Open, FileAccess.Read, FileShare.None))
+			{
+				return ConstantRandomContainer.Load(LoadFile);
+			}
+		}
 
         [BoxelCommon.Timer]
         private static vbl LoadVBL(string Filename)

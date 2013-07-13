@@ -113,7 +113,7 @@ namespace BoxelRenderer
 
         public float GetTextureIndexByType(Axis Side, int BoxelType)
         {
-            return this.TextureManager.GetTextureIndexInArray(this.TextureManager[this.BoxelTypes.GetTypeFromInt(BoxelType).PerSideTexture[Side]]);
+            return this.TextureManager.GetTextureIndexInArray(this.TextureManager[this.BoxelTypes.GetTypeFromInt(BoxelType).TextureOnSide(Side)]);
         }
 
         private void ConstructTextures(Device1 Device)

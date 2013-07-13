@@ -69,7 +69,7 @@ namespace BoxelRenderer
         private bool PendingCalculation;
         private int FreeQueryIndex;
         private int Stalls;
-        private const bool TraceStats = true;
+        private const bool TraceStats = false;
 
         public GPUProfiler(Device1 Device)
         {

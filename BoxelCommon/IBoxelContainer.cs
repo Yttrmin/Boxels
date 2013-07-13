@@ -21,6 +21,7 @@ namespace BoxelCommon
         IEnumerable<IBoxel> BoxelsInRadius(Byte3 ChunkPosition, int RadiusInBoxels);
         int Count { get; }
         void Compact();
+		void Save(System.IO.Stream Stream);
     }
 
     /// <summary>
