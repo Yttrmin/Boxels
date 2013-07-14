@@ -44,13 +44,13 @@ namespace BoxelRenderer
             var CullResult = BoxelHelpers.OcclusionCull(Enumerable);
             System.Diagnostics.Trace.WriteLine(String.Format("{0} {1}", Enumerable.Length, CullResult.Count()));
             var Random = new Random();
-            using (var Buffer = new DataBuffer((Enumerable.Length * SmartCube.MaxDrawnVertexCount) * VertexSizeInBytes))
+            using (var Buffer = new DataBuffer((Enumerable.Length * SmartCubeImmediate.MaxDrawnVertexCount) * VertexSizeInBytes))
             {
                 IntPtr CurrentPosition = Buffer.DataPointer;
                 int FinalSize = 0;
                 foreach (var Boxel in BoxelHelpers.SideOcclusionCull(Enumerable))
                 {
-                    FinalSize += new SmartCube(new Vector3(Boxel.Item1.Position.X * BoxelSize, Boxel.Item1.Position.Y * BoxelSize, 
+                    FinalSize += new SmartCubeImmediate(new Vector3(Boxel.Item1.Position.X * BoxelSize, Boxel.Item1.Position.Y * BoxelSize, 
                         Boxel.Item1.Position.Z * BoxelSize),
                         BoxelSize, Boxel.Item2, this, Boxel.Item1.Type).Write(ref CurrentPosition);
                 }

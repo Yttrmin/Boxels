@@ -78,6 +78,7 @@
     <Compile Include="RenderDevice2D.cs" />
     <Compile Include="RendererHelpers.cs" />
     <Compile Include="RequiresPostSharp.cs" />
+    <Compile Include="SmartCubeImmediate.cs" />
     <Compile Include="TextureLoader.cs" />
     <Compile Include="TextureManager.cs" />
   </ItemGroup>
@@ -110,7 +111,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_BuildVersioningStyle="None.None.None.Increment" BuildVersion_UpdateFileVersion="True" />
+      <UserProperties BuildVersion_UpdateFileVersion="True" BuildVersion_BuildVersioningStyle="None.None.None.Increment" />
     </VisualStudio>
   </ProjectExtensions>
   <Import Project="..\packages\PostSharp.3.0.30\tools\PostSharp.targets" Condition="Exists('..\packages\PostSharp.3.0.30\tools\PostSharp.targets')" />

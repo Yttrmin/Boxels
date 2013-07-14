@@ -154,9 +154,9 @@ namespace BoxelLib
 
         private void Dispose(bool Disposing)
         {
-            this.Renderer.Dispose();
             if (Disposing)
             {
+                this.Renderer.Dispose();
                 GC.SuppressFinalize(this);
             }
         }
