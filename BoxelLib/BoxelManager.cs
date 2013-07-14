@@ -50,18 +50,18 @@ namespace BoxelLib
         }
         public IEnumerable<IBoxel> AllBoxels { get { return this.Boxels.AllBoxels; } }
 
-		private BoxelManager(BoxelTypes<ICubeBoxelType> Types, RenderDevice RenderDevice)
-		{
-			this.BoxelTypes = Types;
-			this.Renderer = new CubeNoGSRenderer(RenderDevice, this.BoxelTypes);
-			this.DrawDistance = 32;
-			this.RenderDevice = RenderDevice;
-			this.PerFrameData = new Buffer(RenderDevice.D3DDevice, Matrix.SizeInBytes, ResourceUsage.Dynamic,
-										   BindFlags.ConstantBuffer, CpuAccessFlags.Write, ResourceOptionFlags.None, 0);
-			this.RenderDevice.D3DDevice.ImmediateContext1.VertexShader.SetConstantBuffer(0, this.PerFrameData);
-			this.RenderDevice.D3DDevice.ImmediateContext1.GeometryShader.SetConstantBuffer(0, this.PerFrameData);
-			this.RenderDevice.D3DDevice.ImmediateContext1.PixelShader.SetConstantBuffer(0, this.PerFrameData);
-		}
+        private BoxelManager(BoxelTypes<ICubeBoxelType> Types, RenderDevice RenderDevice)
+        {
+            this.BoxelTypes = Types;
+            this.Renderer = new CubeNoGSRenderer(RenderDevice, this.BoxelTypes);
+            this.DrawDistance = 32;
+            this.RenderDevice = RenderDevice;
+            this.PerFrameData = new Buffer(RenderDevice.D3DDevice, Matrix.SizeInBytes, ResourceUsage.Dynamic,
+                                           BindFlags.ConstantBuffer, CpuAccessFlags.Write, ResourceOptionFlags.None, 0);
+            this.RenderDevice.D3DDevice.ImmediateContext1.VertexShader.SetConstantBuffer(0, this.PerFrameData);
+            this.RenderDevice.D3DDevice.ImmediateContext1.GeometryShader.SetConstantBuffer(0, this.PerFrameData);
+            this.RenderDevice.D3DDevice.ImmediateContext1.PixelShader.SetConstantBuffer(0, this.PerFrameData);
+        }
 
         public BoxelManager(BoxelManagerSettings Settings, RenderDevice RenderDevice, BoxelTypes<ICubeBoxelType> Types) : this(Types, RenderDevice)
         {
@@ -72,11 +72,11 @@ namespace BoxelLib
             this.Boxels = new ConstantRandomContainer();
         }
 
-		public BoxelManager(IBoxelContainer Container, RenderDevice RenderDevice, BoxelTypes<ICubeBoxelType> Types)
-			: this(Types, RenderDevice)
-		{
-			this.Boxels = Container;
-		}
+        public BoxelManager(IBoxelContainer Container, RenderDevice RenderDevice, BoxelTypes<ICubeBoxelType> Types)
+            : this(Types, RenderDevice)
+        {
+            this.Boxels = Container;
+        }
 
         public void Add(IBoxel Boxel, Int3 Position)
         {
@@ -123,14 +123,14 @@ namespace BoxelLib
             this.RenderDevice.Render();
         }
 
-		[Timer]
-		public void Save(string Filename)
-		{
-			using (var SaveFile = File.Create(Filename))
-			{
-				this.Boxels.Save(SaveFile);
-			}
-		}
+        [Timer]
+        public void Save(string Filename)
+        {
+            using (var SaveFile = File.Create(Filename))
+            {
+                this.Boxels.Save(SaveFile);
+            }
+        }
 
         private void SetupRenderer(BaseRenderer NewRenderer)
         {

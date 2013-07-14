@@ -33,14 +33,14 @@ namespace ProjectBoxelGame
             Trace.WriteLine(String.Format("Exiting normally at {0}", DateTime.Now.ToString()));
         }
 
-		[BoxelCommon.Timer]
-		private static IBoxelContainer LoadBoxels(string Filename)
-		{
-			using (var LoadFile = File.Open(Filename, FileMode.Open, FileAccess.Read, FileShare.None))
-			{
-				return ConstantRandomContainer.Load(LoadFile);
-			}
-		}
+        [BoxelCommon.Timer]
+        private static IBoxelContainer LoadBoxels(string Filename)
+        {
+            using (var LoadFile = File.Open(Filename, FileMode.Open, FileAccess.Read, FileShare.None))
+            {
+                return ConstantRandomContainer.Load(LoadFile);
+            }
+        }
 
         [BoxelCommon.Timer]
         private static vbl LoadVBL(string Filename)

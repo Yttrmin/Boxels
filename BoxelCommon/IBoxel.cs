@@ -3,8 +3,8 @@ using SharpDX;
 
 namespace BoxelLib
 {
-	[ProtoBuf.ProtoContract]
-	[ProtoBuf.ProtoInclude(1, typeof(BasicBoxel))]
+    [ProtoBuf.ProtoContract]
+    [ProtoBuf.ProtoInclude(1, typeof(BasicBoxel))]
     public interface IBoxel
     {
         float Scale { get; }
