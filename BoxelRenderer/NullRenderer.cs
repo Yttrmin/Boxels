@@ -23,7 +23,7 @@ namespace BoxelRenderer
             
         }
 
-        protected override void GenerateBuffers(IEnumerable<BoxelLib.IBoxel> Boxels, SharpDX.Direct3D11.Device1 Device, 
+        protected override void GenerateBuffers(IEnumerable<IBoxel> Boxels, SharpDX.Direct3D11.Device1 Device, 
             out SharpDX.Direct3D11.Buffer VertexBuffer, out SharpDX.Direct3D11.VertexBufferBinding Binding, out int VertexCount, 
             out SharpDX.Direct3D11.Buffer IndexBuffer, out SharpDX.Direct3D11.Buffer InstanceBuffer, 
             out SharpDX.Direct3D11.VertexBufferBinding InstanceBinding, out int InstanceCount, int VertexSizeInBytes)

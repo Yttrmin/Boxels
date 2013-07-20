@@ -1,7 +1,7 @@
 ﻿using BoxelCommon;
 using SharpDX;
 
-namespace BoxelLib
+namespace BoxelCommon
 {
     [ProtoBuf.ProtoContract]
     [ProtoBuf.ProtoInclude(1, typeof(BasicBoxel))]

@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using BoxelLib;
 using SharpDX;
 using SharpDX.DXGI;
 using SharpDX.Direct3D;

@@ -22,15 +22,20 @@ namespace BoxelRenderer
         private Device2 DXGIDevice;
         private SwapChain1 SwapChain;
         private RenderTargetView BackBuffer;
+        private Texture2D ScreenshotTexture;
         private DepthStencilView DepthBuffer;
         private ViewportF Viewport;
         private bool PlatformUpdate;
         private const bool UseFlipSequential = true;
         private Color ClearColor;
+        private long FrameCount;
+        private bool Recording;
+        private bool PendingScreenshot;
 
         public RenderDevice(RenderForm Window)
         {
             this.InitializeDirect3D(Window);
+            this.InitializeScreenshotTexture();
             this.Device2D = new RenderDevice2D(this.DXGIDevice);
             using (var BackBufferSurface = this.SwapChain.GetBackBuffer<Surface2>(0))
             {
@@ -55,11 +60,29 @@ namespace BoxelRenderer
             this.Profiler.Render(this.Device2D);
             this.Profiler.RecordTimeStamp(GPUProfiler.TimeStamp.Draw2D);
             this.SwapChain.Present(1, PresentFlags.None);
+            if (this.PendingScreenshot || this.Recording)
+            {
+                this.CopyBackBuffer();
+                using (var Surface = this.ScreenshotTexture.QueryInterface<Surface2>())
+                {
+                    if (this.PendingScreenshot)
+                    {
+                        throw new NotImplementedException();
+                        this.Device2D.SaveSurfaceToFile(String.Format("./movie/frame_{0}.png", this.FrameCount), Surface);
+                        this.PendingScreenshot = false;
+                    }
+                    if (this.Recording)
+                    {
+                        this.Device2D.SaveSurfaceToFile(String.Format("./movie/frame_{0}.png", this.FrameCount), Surface);
+                    }
+                }
+            }
             this.Profiler.RecordTimeStamp(GPUProfiler.TimeStamp.Present);
             this.ImmediateContext.ClearRenderTargetView(this.BackBuffer, this.ClearColor);
             this.ImmediateContext.ClearDepthStencilView(this.DepthBuffer, DepthStencilClearFlags.Depth, 1, 0);
             this.ImmediateContext.OutputMerger.SetTargets(this.DepthBuffer, this.BackBuffer);
             this.Profiler.EndFrame();
+            this.FrameCount++;
         }
 
         public void Resize(int NewWidth, int NewHeight)
@@ -89,6 +112,29 @@ namespace BoxelRenderer
         {
             this.SwapChain.SetFullscreenState(true, null);
             this.Resize(1280, 1024);
+        }
+
+        public void Record()
+        {
+            this.Recording = true;
+        }
+
+        public void StopRecord()
+        {
+            this.Recording = false;
+        }
+
+        public void Screenshot()
+        {
+            this.PendingScreenshot = true;
+        }
+
+        private void CopyBackBuffer()
+        {
+            using(var BackBufferTexture = this.BackBuffer.ResourceAs<Texture2D>())
+            {
+                this.ImmediateContext.CopyResource(BackBufferTexture, this.ScreenshotTexture);
+            }
         }
 
         private void InitializeDirect3D(RenderForm Window)
@@ -159,6 +205,23 @@ namespace BoxelRenderer
             this.InitializeDepthBuffer(BackBufferTexture.Description.Width, BackBufferTexture.Description.Height);
             BackBufferTexture.Dispose();
             Trace.WriteLine("-------------------End D3D11.1------------------------------");
+        }
+
+        private void InitializeScreenshotTexture()
+        {
+            this.ScreenshotTexture = new Texture2D(this.D3DDevice, new Texture2DDescription()
+            {
+                ArraySize=1,
+                BindFlags=BindFlags.None,
+                CpuAccessFlags=CpuAccessFlags.Read,
+                Format=Format.B8G8R8A8_UNorm,
+                Height=this.SwapChain.Description1.Height,
+                Width=this.SwapChain.Description1.Width,
+                MipLevels=1,
+                OptionFlags=ResourceOptionFlags.None,
+                SampleDescription=new SampleDescription(1,0),
+                Usage=ResourceUsage.Staging,
+            });
         }
 
         private void InitializeViewport()

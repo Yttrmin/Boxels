@@ -9,16 +9,15 @@ using System.Threading.Tasks;
 
 namespace BoxelRenderer
 {
-    public struct SmartCubeImmediate
+    public static class SmartCubeImmediate
     {
         private static IDictionary<BoxelHelpers.Side, FaceImmediate> FaceTemplates;
-        private static IList<FaceImmediate> Faces;
-        //private readonly IList<Face> Faces;
+        private static Vector3 TextureOffset;
         public const int MaxDrawnVertexCount = FaceImmediate.DrawnVertexCount * 6;
 
         static SmartCubeImmediate()
         {
-            Faces = new List<FaceImmediate>(6);
+            TextureOffset = new Vector3(0, 0, -1);
             FaceTemplates = new Dictionary<BoxelHelpers.Side, FaceImmediate>(6);
             FaceTemplates[BoxelHelpers.Side.NegX] = new FaceImmediate(
                 new Vertex(new Vector3(-1, 1, 1), new Vector3(0, 0, 0)),
@@ -52,105 +51,95 @@ namespace BoxelRenderer
                 new Vertex(new Vector3(1, 1, 1), new Vector3(0, 0, 0)));
         }
 
-        public SmartCubeImmediate(Vector3 Position, int BoxelSize, BoxelHelpers.Side Sides, BaseRenderer Renderer, int TextureIndex)
+        public static void SetCube(Vector3 Position, int BoxelSize, BoxelHelpers.Side Sides, BaseRenderer Renderer, int TextureIndex)
         {
-            //this.Faces = new List<Face>(6);
-            var SideKey = BoxelHelpers.Side.None;
-            var TextureOffset = new Vector3(0, 0, -1);
             //@TODO - Roll.
             if ((Sides & BoxelHelpers.Side.NegX) != 0)
             {
                 TextureOffset.Z = Renderer.GetTextureIndexByType(Axis.NegX, TextureIndex);
-                Faces.Add(FaceTemplates[BoxelHelpers.Side.NegX].Offset(Position, TextureOffset));
-                SideKey |= BoxelHelpers.Side.NegX;
+                FaceTemplates[BoxelHelpers.Side.NegX].AddOffset(Position, TextureOffset);
             }
             if ((Sides & BoxelHelpers.Side.PosX) != 0)
             {
                 TextureOffset.Z = Renderer.GetTextureIndexByType(Axis.PosX, TextureIndex);
-                Faces.Add(FaceTemplates[BoxelHelpers.Side.PosX].Offset(Position, TextureOffset));
-                SideKey |= BoxelHelpers.Side.PosX;
+                FaceTemplates[BoxelHelpers.Side.PosX].AddOffset(Position, TextureOffset);
             }
             if ((Sides & BoxelHelpers.Side.NegY) != 0)
             {
                 TextureOffset.Z = Renderer.GetTextureIndexByType(Axis.NegY, TextureIndex);
-                Faces.Add(FaceTemplates[BoxelHelpers.Side.NegY].Offset(Position, TextureOffset));
-                SideKey |= BoxelHelpers.Side.NegY;
+                FaceTemplates[BoxelHelpers.Side.NegY].AddOffset(Position, TextureOffset);
             }
             if ((Sides & BoxelHelpers.Side.PosY) != 0)
             {
                 TextureOffset.Z = Renderer.GetTextureIndexByType(Axis.PosY, TextureIndex);
-                Faces.Add(FaceTemplates[BoxelHelpers.Side.PosY].Offset(Position, TextureOffset));
-                SideKey |= BoxelHelpers.Side.PosY;
+                FaceTemplates[BoxelHelpers.Side.PosY].AddOffset(Position, TextureOffset);
             }
             if ((Sides & BoxelHelpers.Side.NegZ) != 0)
             {
                 TextureOffset.Z = Renderer.GetTextureIndexByType(Axis.NegZ, TextureIndex);
-                Faces.Add(FaceTemplates[BoxelHelpers.Side.NegZ].Offset(Position, TextureOffset));
-                SideKey |= BoxelHelpers.Side.NegZ;
+                FaceTemplates[BoxelHelpers.Side.NegZ].AddOffset(Position, TextureOffset);
             }
             if ((Sides & BoxelHelpers.Side.PosZ) != 0)
             {
                 TextureOffset.Z = Renderer.GetTextureIndexByType(Axis.PosZ, TextureIndex);
-                Faces.Add(FaceTemplates[BoxelHelpers.Side.PosZ].Offset(Position, TextureOffset));
-                SideKey |= BoxelHelpers.Side.PosZ;
+                FaceTemplates[BoxelHelpers.Side.PosZ].AddOffset(Position, TextureOffset);
             }
         }
 
-        public int Write(ref IntPtr Pointer)
+        public static int Write(ref IntPtr Pointer)
         {
-            int i;
-            for (i = 0; i < Faces.Count; i++)
+            var Size = FaceImmediate.Index * (Vertex.SizeInBytes * 6);
+            FaceImmediate.Write(ref Pointer);
+            return Size;
+        }
+
+        private struct FaceImmediate
+        {
+            private static Vertex[][] NewVertices;
+            public static int Index { get; private set; }
+            public readonly Vertex[] Vertices;
+            public const int DrawnVertexCount = 6;
+
+            static FaceImmediate()
             {
-                Faces[i].Write(ref Pointer);
+                NewVertices = new Vertex[6][];
+                for (var i = 0; i < NewVertices.Length; i++)
+                {
+                    NewVertices[i] = new Vertex[4];
+                }
+                Index = 0;
             }
-            Faces.Clear();
-            return i * (Vertex.SizeInBytes * 6);
-        }
-    }
 
-    public struct FaceImmediate
-    {
-        private static Vertex[][] NewVertices;
-        private static int Index;
-        public readonly Vertex[] Vertices;
-        public const int DrawnVertexCount = 6;
-
-        static FaceImmediate()
-        {
-            NewVertices = new Vertex[6][];
-            for (var i = 0; i < NewVertices.Length; i++)
+            public FaceImmediate(params Vertex[] Vertices)
             {
-                NewVertices[i] = new Vertex[4];
+                if (Vertices.Length != 4)
+                {
+                    throw new ArgumentException(String.Format("Vertices has {0} elements, Faces should have 4!", Vertices.Length));
+                }
+                this.Vertices = Vertices;
             }
-            Index = 0;
-        }
 
-        public FaceImmediate(params Vertex[] Vertices)
-        {
-            if (Vertices.Length != 4)
+            public void AddOffset(Vector3 Offset, Vector3 TextureOffset)
             {
-                throw new ArgumentException(String.Format("Vertices has {0} elements, Faces should have 4!", Vertices.Length));
+                for (var i = 0; i < NewVertices[Index].Length; i++)
+                {
+                    NewVertices[Index][i] = this.Vertices[i].Offset(Offset, TextureOffset);
+                }
+                Index++;
             }
-            this.Vertices = Vertices;
-        }
 
-        public FaceImmediate Offset(Vector3 Offset, Vector3 TextureOffset)
-        {
-            //var NewVertices = new Vertex[this.Vertices.Length];
-            for (var i = 0; i < NewVertices[Index].Length; i++)
+            public static void Write(ref IntPtr Pointer)
             {
-                NewVertices[Index][i] = this.Vertices[i].Offset(Offset, TextureOffset);
+                for (var i = 0; i < Index; i++)
+                {
+                    var WriteVertices = NewVertices[i];
+                    Pointer = Utilities.Write<Vertex>(Pointer, WriteVertices, 0, 3);
+                    Pointer = Utilities.WriteAndPosition<Vertex>(Pointer, ref WriteVertices[2]);
+                    Pointer = Utilities.WriteAndPosition<Vertex>(Pointer, ref WriteVertices[1]);
+                    Pointer = Utilities.WriteAndPosition<Vertex>(Pointer, ref WriteVertices[3]);
+                }
+                Index = 0;
             }
-            return new FaceImmediate(NewVertices[Index++]);
-        }
-
-        public void Write(ref IntPtr Pointer)
-        {
-            Pointer = Utilities.Write<Vertex>(Pointer, this.Vertices, 0, 3);
-            Pointer = Utilities.WriteAndPosition<Vertex>(Pointer, ref this.Vertices[2]);
-            Pointer = Utilities.WriteAndPosition<Vertex>(Pointer, ref this.Vertices[1]);
-            Pointer = Utilities.WriteAndPosition<Vertex>(Pointer, ref this.Vertices[3]);
-            Index = 0;
         }
     }
 

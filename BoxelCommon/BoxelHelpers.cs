@@ -1,8 +1,8 @@
-﻿using BoxelLib;
-using SharpDX;
+﻿using SharpDX;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -52,8 +52,21 @@ namespace BoxelCommon
             }
         }
 
+        [StructLayout(LayoutKind.Auto)]
+        public struct VisibleBoxel
+        {
+            public readonly IBoxel Boxel;
+            public readonly BoxelHelpers.Side VisibleSides;
+
+            public VisibleBoxel(IBoxel Boxel, BoxelHelpers.Side VisibleSides)
+            {
+                this.Boxel = Boxel;
+                this.VisibleSides = VisibleSides;
+            }
+        }
+
         [Timer]
-        public static IEnumerable<Tuple<IBoxel, BoxelHelpers.Side>> SideOcclusionCull(IEnumerable<IBoxel> Boxels)
+        public static IEnumerable<VisibleBoxel> SideOcclusionCull(IEnumerable<IBoxel> Boxels)
         {
             foreach (var Boxel in Boxels)
             {
@@ -71,7 +84,7 @@ namespace BoxelCommon
                     Sides |= Side.PosZ;
                 if (Container.AtOrDefault(Boxel.Position - Int3.UnitZ) == null)
                     Sides |= Side.NegZ;
-                yield return new Tuple<IBoxel, Side>(Boxel, Sides);
+                yield return new VisibleBoxel(Boxel, Sides);
             }
         }
     }

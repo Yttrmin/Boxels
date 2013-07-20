@@ -3,7 +3,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using BoxelLib;
 using SharpDX.D3DCompiler;
 using SharpDX.DXGI;
 using SharpDX.Direct3D;

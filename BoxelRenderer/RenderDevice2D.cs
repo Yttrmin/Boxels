@@ -52,23 +52,31 @@ namespace BoxelRenderer
 
             public void SaveSurfaceToFile(string FileName, SharpDX.DXGI.Surface2 Surface)
             {
-                var Bitmap = new Bitmap1(this.Context, Surface);
-                var BitmapEncoder = new BitmapEncoder(Factory, ContainerFormatGuids.Png);
-                using (var File = new FileStream(FileName, FileMode.Create, FileAccess.Write))
+                //@TODO - Hideous.
+                using (var Bitmap = new Bitmap1(this.Context, Surface))
                 {
-                    BitmapEncoder.Initialize(File);
+                    using (var BitmapEncoder = new BitmapEncoder(Factory, ContainerFormatGuids.Png))
+                    {
+                        using (var File = new FileStream(FileName, FileMode.Create, FileAccess.Write))
+                        {
+                            BitmapEncoder.Initialize(File);
 
-                    var FrameEncoder = new BitmapFrameEncode(BitmapEncoder);
-                    FrameEncoder.Initialize();
+                            using (var FrameEncoder = new BitmapFrameEncode(BitmapEncoder))
+                            {
+                                FrameEncoder.Initialize();
 
-                    var ImageEncoder = new ImageEncoder(Factory, Device);
+                                using (var ImageEncoder = new ImageEncoder(Factory, Device))
+                                {
 
-                    ImageEncoder.WriteFrame(Bitmap, FrameEncoder, new ImageParameters(new SharpDX.Direct2D1.PixelFormat(SharpDX.DXGI.Format.B8G8R8A8_UNorm,
-                        AlphaMode.Ignore),
-                        Bitmap.DotsPerInch.Width, Bitmap.DotsPerInch.Height, 0, 0, (int)Bitmap.PixelSize.Width, (int)Bitmap.PixelSize.Height)); ;
-
-                    FrameEncoder.Commit();
-                    BitmapEncoder.Commit();
+                                    ImageEncoder.WriteFrame(Bitmap, FrameEncoder, new ImageParameters(new SharpDX.Direct2D1.PixelFormat(SharpDX.DXGI.Format.B8G8R8A8_UNorm,
+                                        AlphaMode.Ignore),
+                                        Bitmap.DotsPerInch.Width, Bitmap.DotsPerInch.Height, 0, 0, (int)Bitmap.PixelSize.Width, (int)Bitmap.PixelSize.Height));
+                                }
+                                FrameEncoder.Commit();
+                            }
+                            BitmapEncoder.Commit();
+                        }
+                    }
                 }
             }
 
@@ -124,6 +132,7 @@ namespace BoxelRenderer
                     this.DestroyContext();
                 }
                 this.Context = new DeviceContext(NewTarget);
+                
                 this.DefaultBrush = new SolidColorBrush(this.Context, Color.Red);
             }
 

@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("ProjectBoxelGame")]
+[assembly: AssemblyTitle("BoxelPhysics")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("ProjectBoxelGame")]
+[assembly: AssemblyProduct("BoxelPhysics")]
 [assembly: AssemblyCopyright("Copyright ©  2013")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("9f1c1835-8ddc-479d-a5bb-5893b7393b91")]
+[assembly: Guid("30e78aa5-b56d-49a7-b897-762437b4acb9")]
 
 // Version information for an assembly consists of the following four values:
 //
@@ -33,5 +33,4 @@ using System.Runtime.InteropServices;
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
 [assembly: AssemblyVersion("1.0.0.0")]
-[assembly: AssemblyFileVersion("1.0.0.105")]
-[assembly: AssemblyInformationalVersion("0.1.0 Internal")]
+[assembly: AssemblyFileVersion("1.0.0.49")]

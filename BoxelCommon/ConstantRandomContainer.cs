@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using BoxelLib;
 using SharpDX;
 using ProtoBuf;
 
@@ -101,12 +100,18 @@ namespace BoxelCommon
 
         private ConstantChunk LazyGetChunk(int Position, bool ReadOnly)
         {
-            if (!this.Chunks.ContainsKey(Position))
+            ConstantChunk Result;
+            this.Chunks.TryGetValue(Position, out Result);
+            if (Result != null)
             {
-                //@TODO - ReadOnly optimization.
-                this.Chunks[Position] = new ConstantChunk(ChunkSize);
+                return Result;
             }
-            return this.Chunks[Position];
+            else
+            {
+                Result = new ConstantChunk(ChunkSize);
+                this.Chunks[Position] = Result;
+                return Result;
+            }
         }
 
         /// <summary>
@@ -175,9 +180,9 @@ namespace BoxelCommon
 
         public IBoxel AtOrDefault(Byte3 Position)
         {
-            if (this.Boxels.ContainsKey(Position.GetHashCode()))
-                return this.Boxels[Position.GetHashCode()];
-            return null;
+            IBoxel Result;
+            this.Boxels.TryGetValue(Position.GetHashCode(), out Result);
+            return Result;
         }
     }
 

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using BoxelLib;
 using SharpDX;
 using SharpDX.Direct3D;
 using SharpDX.Direct3D11;
@@ -41,21 +40,22 @@ namespace BoxelRenderer
             IndexBuffer = null;
             InstanceCount = 0;
             var Enumerable = this.GetBoxelArray(Boxels);
-            var CullResult = BoxelHelpers.OcclusionCull(Enumerable);
-            System.Diagnostics.Trace.WriteLine(String.Format("{0} {1}", Enumerable.Length, CullResult.Count()));
             var Random = new Random();
             using (var Buffer = new DataBuffer((Enumerable.Length * SmartCubeImmediate.MaxDrawnVertexCount) * VertexSizeInBytes))
             {
                 IntPtr CurrentPosition = Buffer.DataPointer;
                 int FinalSize = 0;
-                foreach (var Boxel in BoxelHelpers.SideOcclusionCull(Enumerable))
+                // 72.8% of time spent in here. Nearly half of it is from iterating over the culling results alone.
+                foreach (var Result in BoxelHelpers.SideOcclusionCull(Enumerable))
                 {
-                    FinalSize += new SmartCubeImmediate(new Vector3(Boxel.Item1.Position.X * BoxelSize, Boxel.Item1.Position.Y * BoxelSize, 
-                        Boxel.Item1.Position.Z * BoxelSize),
-                        BoxelSize, Boxel.Item2, this, Boxel.Item1.Type).Write(ref CurrentPosition);
+                    SmartCubeImmediate.SetCube(new Vector3(Result.Boxel.Position.X * BoxelSize, Result.Boxel.Position.Y * BoxelSize,
+                        Result.Boxel.Position.Z * BoxelSize),
+                        BoxelSize, Result.VisibleSides, this, Result.Boxel.Type);
+                    FinalSize += SmartCubeImmediate.Write(ref CurrentPosition);
                 }
                 VertexCount = FinalSize / Vertex.SizeInBytes;
                 System.Diagnostics.Trace.WriteLine(String.Format("Final vertex count: {0}", FinalSize / Vertex.SizeInBytes));
+                // 21.4% of time spent past here.
                 VertexBuffer = new Buffer(Device, Buffer.DataPointer, new BufferDescription()
                 {
                     BindFlags=BindFlags.VertexBuffer,
