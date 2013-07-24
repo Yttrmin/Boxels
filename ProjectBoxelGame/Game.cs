@@ -13,6 +13,7 @@ using SharpDX.Windows;
 using System.Drawing;
 using SharpDX.RawInput;
 using SharpDX.Multimedia;
+using BoxelGame;
 
 namespace ProjectBoxelGame
 {
@@ -23,6 +24,7 @@ namespace ProjectBoxelGame
         private readonly RenderDevice RenderDevice;
         private readonly ICamera Camera;
         private readonly Input Input;
+        private readonly ConsoleTUI ConsoleTUI;
         private bool MouseEnabled;
         private bool Resized;
         private const int Width = 1280;
@@ -38,6 +40,8 @@ namespace ProjectBoxelGame
             this.Window.UserResized += (a, b) => { this.Resized = true; };
             this.Camera = new BasicCamera(new Vector3(0, 10, 0), new Vector3(1, 0, 0), Width, Height);
             this.RenderDevice = new RenderDevice(this.Window);
+            this.ConsoleTUI = new BoxelGame.ConsoleTUI(this.Console, this.RenderDevice.Device2D);
+            DeveloperConsole.SetInstanceForCommands(this.RenderDevice);
         }
 
         public Game(VBL.vbl Level) : this()
@@ -71,11 +75,6 @@ namespace ProjectBoxelGame
         public void Tick(double DeltaTime)
         {
             this.RenderDevice.Profiler.StartFrame(DeltaTime);
-            if (this.Input.IsDown(Keys.Escape))
-            {
-                this.Window.Close();
-                return;
-            }
             if (this.Resized)
             {
                 var Width = this.Window.ClientSize.Width;
@@ -84,29 +83,47 @@ namespace ProjectBoxelGame
                 this.Camera.SetDimensions(Width, Height);
                 this.Resized = false;
             }
-            var Magnitude = 10;
-            Magnitude *= this.Input.IsDown(Keys.ShiftKey) ? 10 : 1;
-            //Trace.WriteLine(String.Format("DT: {0}", DeltaTime));
-            if (this.Input.IsDown(Keys.W))
-                this.Camera.MoveForward(Magnitude * (float)DeltaTime);
-            if (this.Input.IsDown(Keys.A))
-                this.Camera.MoveRight(-Magnitude * (float)DeltaTime);
-            if (this.Input.IsDown(Keys.S))
-                this.Camera.MoveForward(-Magnitude * (float)DeltaTime);
-            if (this.Input.IsDown(Keys.D))
-                this.Camera.MoveRight(Magnitude * (float)DeltaTime);
-            if (this.Input.WasPressed(Keys.ControlKey))
-                this.MouseEnabled = !this.MouseEnabled;
-            if (this.Input.WasPressed(Keys.F2))
-                this.RenderDevice.SetFullscreen();
-            if (this.MouseEnabled)
+            if (this.Input.IsDown(Keys.Escape))
             {
-                this.Camera.TurnRight(this.Input.DeltaX);
-                this.Camera.TurnUp(this.Input.DeltaY);
+                this.Window.Close();
+                return;
             }
-            this.Input.ResetKeyPresses();
+            if (!this.ConsoleTUI.IsOpen)
+            {
+                var Magnitude = 10;
+                Magnitude *= this.Input.IsDown(Keys.ShiftKey) ? 10 : 1;
+                //Trace.WriteLine(String.Format("DT: {0}", DeltaTime));
+                if (this.Input.IsDown(Keys.W))
+                    this.Camera.MoveForward(Magnitude * (float)DeltaTime);
+                if (this.Input.IsDown(Keys.A))
+                    this.Camera.MoveRight(-Magnitude * (float)DeltaTime);
+                if (this.Input.IsDown(Keys.S))
+                    this.Camera.MoveForward(-Magnitude * (float)DeltaTime);
+                if (this.Input.IsDown(Keys.D))
+                    this.Camera.MoveRight(Magnitude * (float)DeltaTime);
+                if (this.Input.WasPressed(Keys.ControlKey))
+                    this.MouseEnabled = !this.MouseEnabled;
+                if (this.Input.WasPressed(Keys.F2))
+                    this.RenderDevice.SetFullscreen();
+
+                if (this.MouseEnabled)
+                {
+                    this.Camera.TurnRight(this.Input.DeltaX);
+                    this.Camera.TurnUp(this.Input.DeltaY);
+                }
+            }
+            if(this.Input.WasPressed(Keys.Oemtilde))
+            {
+                this.ConsoleTUI.Open(this.Input);
+            }
+            if (!this.ConsoleTUI.IsOpen)
+                this.Input.ResetKeyPresses();
             this.Camera.Tick(DeltaTime);
+            this.ConsoleTUI.Tick(DeltaTime);
             this.Manager.Render(this.Camera);
+            if (this.ConsoleTUI.IsOpen)
+                this.ConsoleTUI.Render(this.RenderDevice.Device2D);
+            this.RenderDevice.Render();
             this.Input.ResetMouse(this.MouseEnabled);
         }
 
@@ -116,6 +133,12 @@ namespace ProjectBoxelGame
         public void Run()
         {
             RenderLoop.Run(Window, this.OnMessagePump);
+        }
+
+        protected override void InitializeConsole(DeveloperConsole Console)
+        {
+            Console.AddCommandsFromAssembly(typeof(Game).Assembly);
+            Console.AddCommandsFromAssembly(typeof(RenderDevice).Assembly);
         }
 
         private void Dispose(bool Disposing)

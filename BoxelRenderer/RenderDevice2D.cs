@@ -18,7 +18,7 @@ namespace BoxelRenderer
         public sealed class RenderDevice2D : IDisposable
         {
             private Device Device;
-            private DeviceContext Context;
+            public DeviceContext Context { get; private set; }
             private SharpDX.DirectWrite.Factory1 DWriteFactory;
             private SolidColorBrush DefaultBrush;
             private TextFormat DefaultFont;
@@ -99,6 +99,16 @@ namespace BoxelRenderer
                 this.DefaultBrush.Color = TextColor;
                 this.Context.BeginDraw();
                 this.Context.DrawText(Text, this.DefaultFont, Position, this.DefaultBrush);
+                this.Context.EndDraw();
+                this.DefaultBrush.Color = OldColor;
+            }
+
+            public void FillRectangle(RectangleF Rect, Color Color)
+            {
+                var OldColor = this.DefaultBrush.Color;
+                this.DefaultBrush.Color = Color;
+                this.Context.BeginDraw();
+                this.Context.FillRectangle(Rect, this.DefaultBrush);
                 this.Context.EndDraw();
                 this.DefaultBrush.Color = OldColor;
             }

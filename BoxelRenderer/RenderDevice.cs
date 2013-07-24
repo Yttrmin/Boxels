@@ -7,6 +7,8 @@ using SharpDX.Direct3D;
 using SharpDX.Windows;
 using SharpDX.Direct3D11;
 using Device1 = SharpDX.DXGI.Device1;
+using BoxelGame;
+using System.IO;
 
 namespace BoxelRenderer
 {
@@ -26,11 +28,13 @@ namespace BoxelRenderer
         private DepthStencilView DepthBuffer;
         private ViewportF Viewport;
         private bool PlatformUpdate;
-        private const bool UseFlipSequential = true;
+        private const bool UseFlipSequential = false;
         private Color ClearColor;
         private long FrameCount;
         private bool Recording;
         private bool PendingScreenshot;
+        private string ScreenshotDirectory { get; set; }
+        private string MovieDirectory { get; set; }
 
         public RenderDevice(RenderForm Window)
         {
@@ -52,6 +56,7 @@ namespace BoxelRenderer
             }
             this.ClearColor = new Color(119, 228, 255);
             this.Profiler = new GPUProfiler(this.D3DDevice);
+            this.ScreenshotDirectory = "screenshots";
         }
 
         public void Render()
@@ -59,7 +64,7 @@ namespace BoxelRenderer
             this.Device2D.Draw();
             this.Profiler.Render(this.Device2D);
             this.Profiler.RecordTimeStamp(GPUProfiler.TimeStamp.Draw2D);
-            this.SwapChain.Present(1, PresentFlags.None);
+            this.SwapChain.Present(0, PresentFlags.None);
             if (this.PendingScreenshot || this.Recording)
             {
                 this.CopyBackBuffer();
@@ -67,13 +72,13 @@ namespace BoxelRenderer
                 {
                     if (this.PendingScreenshot)
                     {
-                        throw new NotImplementedException();
-                        this.Device2D.SaveSurfaceToFile(String.Format("./movie/frame_{0}.png", this.FrameCount), Surface);
+                        this.Device2D.SaveSurfaceToFile(String.Format("./{0}/ss_{1}.png", this.ScreenshotDirectory,
+                            (DateTime.UtcNow - DateTime.MinValue).TotalSeconds), Surface);
                         this.PendingScreenshot = false;
                     }
                     if (this.Recording)
                     {
-                        this.Device2D.SaveSurfaceToFile(String.Format("./movie/frame_{0}.png", this.FrameCount), Surface);
+                        this.Device2D.SaveSurfaceToFile(String.Format("./{0}/frame_{1}.png", this.MovieDirectory, this.FrameCount), Surface);
                     }
                 }
             }
@@ -114,18 +119,22 @@ namespace BoxelRenderer
             this.Resize(1280, 1024);
         }
 
-        public void Record()
+        public void Record(string FolderName)
         {
+            this.MovieDirectory = FolderName;
+            Directory.CreateDirectory(FolderName);
             this.Recording = true;
         }
 
-        public void StopRecord()
+        public void Stop()
         {
             this.Recording = false;
         }
 
+        [ConsoleCommand]
         public void Screenshot()
         {
+            Directory.CreateDirectory(this.ScreenshotDirectory);
             this.PendingScreenshot = true;
         }
 

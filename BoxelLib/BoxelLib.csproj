@@ -56,7 +56,6 @@
     <Compile Include="BoxelManager.cs" />
     <Compile Include="BoxelManagerFinite.cs" />
     <Compile Include="BoxelManagerInfiniteLinear.cs" />
-    <Compile Include="GameBase.cs" />
     <Compile Include="ICamera.cs" />
     <Compile Include="ILocalPlayer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -78,7 +77,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UpdateFileVersion="True" BuildVersion_BuildVersioningStyle="None.None.None.Increment" />
+      <UserProperties BuildVersion_BuildVersioningStyle="None.None.None.Increment" BuildVersion_UpdateFileVersion="True" />
     </VisualStudio>
   </ProjectExtensions>
   <Import Project="..\packages\PostSharp.3.0.30\tools\PostSharp.targets" Condition="Exists('..\packages\PostSharp.3.0.30\tools\PostSharp.targets')" />

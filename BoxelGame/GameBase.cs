@@ -1,12 +1,12 @@
-﻿using System;
+﻿using BoxelCommon;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using BoxelCommon;
 
-namespace BoxelLib
+namespace BoxelGame
 {
     public abstract class GameBase
     {
@@ -14,12 +14,19 @@ namespace BoxelLib
         private event Action<double> ToTick;
         private bool FixedTimestep;
         private double TimeStep;
+        protected readonly DeveloperConsole Console;
 
         protected GameBase()
         {
             this.GameTimer = new Stopwatch();
+            this.Console = new DeveloperConsole();
+            DeveloperConsole.SetInstanceForCommands(Console);
+            this.InitializeConsole(this.Console);
         }
 
+        protected abstract void InitializeConsole(DeveloperConsole Console);
+
+        //@TODO - Nullable property?
         protected void EnableFixedTimestep(double FixedTimestep)
         {
             this.FixedTimestep = true;

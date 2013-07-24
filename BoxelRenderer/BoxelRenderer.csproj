@@ -79,6 +79,7 @@
     <Compile Include="RendererHelpers.cs" />
     <Compile Include="RequiresPostSharp.cs" />
     <Compile Include="SmartCubeImmediate.cs" />
+    <Compile Include="TextStack.cs" />
     <Compile Include="TextureLoader.cs" />
     <Compile Include="TextureManager.cs" />
   </ItemGroup>

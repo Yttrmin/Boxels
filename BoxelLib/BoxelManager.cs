@@ -120,7 +120,6 @@ namespace BoxelLib
             this.UpdatePerFrameData(RenderCamera);
             this.RenderDevice.Profiler.RecordTimeStamp(GPUProfiler.TimeStamp.PerFrameBufferUpdate);
             this.Renderer.Render(this.RenderDevice.D3DDevice.ImmediateContext1);
-            this.RenderDevice.Render();
         }
 
         [Timer]

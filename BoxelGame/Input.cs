@@ -8,18 +8,21 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Windows.Input;
 
-namespace ProjectBoxelGame
+namespace BoxelGame
 {
-    class Input
+    public partial class Input
     {
         private IDictionary<Keys, KeyState> KeyStates;
         private ISet<Keys> PressedKeys;
         private RenderForm Window;
         private int CenterX, CenterY;
+        private StringBuilder InputString;
+        public string TextInput { get { return this.InputString.ToString(); } }
         public int DeltaX {get; private set;}
         public int DeltaY { get; private set; }
-
+        
         public Input(RenderForm Window)
         {
             this.Window = Window;
@@ -28,6 +31,7 @@ namespace ProjectBoxelGame
             //SetCursorPos(this.CenterX, this.CenterY);
             this.PressedKeys = new HashSet<Keys>();
             this.KeyStates = new Dictionary<Keys, KeyState>();
+            this.InputString = new StringBuilder();
             foreach(Keys KeyEnum in Enum.GetValues(typeof(Keys)))
             {
                 this.KeyStates[KeyEnum] = KeyState.KeyUp;
@@ -69,6 +73,7 @@ namespace ProjectBoxelGame
         public void ResetKeyPresses()
         {
             this.PressedKeys.Clear();
+            this.InputString.Clear();
         }
 
         private void OnKeyEvent(Object Sender, KeyboardInputEventArgs Args)
@@ -76,6 +81,12 @@ namespace ProjectBoxelGame
             KeyStates[Args.Key] = Args.State;
             if (Args.State == KeyState.KeyUp)
                 this.PressedKeys.Add(Args.Key);
+            if (Args.State == KeyState.KeyDown)
+            {
+                var InputChar = KeyMap.KeysToChar(Args.Key);
+                if (char.IsLetter(InputChar) || char.IsNumber(InputChar) || char.IsPunctuation(InputChar) || InputChar == ' ')
+                    this.InputString.Append(InputChar);
+            }
             //System.Diagnostics.Trace.WriteLine(String.Format("Input: {0} is now {1}", Args.Key, Args.State));
         }
 

@@ -56,6 +56,7 @@
     <Compile Include="Boxels.cs" />
     <Compile Include="BoxelTypes.cs" />
     <Compile Include="Byte3.cs" />
+    <Compile Include="ConsoleCommand.cs" />
     <Compile Include="ConstantRandomContainer.cs" />
     <Compile Include="IBoxel.cs" />
     <Compile Include="IBoxelContainer.cs" />
@@ -70,7 +71,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UpdateFileVersion="True" BuildVersion_BuildVersioningStyle="None.None.None.Increment" />
+      <UserProperties BuildVersion_BuildVersioningStyle="None.None.None.Increment" BuildVersion_UpdateFileVersion="True" />
     </VisualStudio>
   </ProjectExtensions>
   <Import Project="..\packages\PostSharp.3.0.30\tools\PostSharp.targets" Condition="Exists('..\packages\PostSharp.3.0.30\tools\PostSharp.targets')" />
