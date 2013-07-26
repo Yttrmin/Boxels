@@ -28,7 +28,7 @@ namespace BoxelRenderer
         private DepthStencilView DepthBuffer;
         private ViewportF Viewport;
         private bool PlatformUpdate;
-        private const bool UseFlipSequential = false;
+        private const bool UseFlipSequential = true;
         private Color ClearColor;
         private long FrameCount;
         private bool Recording;
@@ -64,7 +64,7 @@ namespace BoxelRenderer
             this.Device2D.Draw();
             this.Profiler.Render(this.Device2D);
             this.Profiler.RecordTimeStamp(GPUProfiler.TimeStamp.Draw2D);
-            this.SwapChain.Present(0, PresentFlags.None);
+            this.SwapChain.Present(1, PresentFlags.None);
             if (this.PendingScreenshot || this.Recording)
             {
                 this.CopyBackBuffer();

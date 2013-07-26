@@ -7,7 +7,7 @@ using PostSharp;
 
 namespace BoxelGame
 {
-    [AttributeUsage(AttributeTargets.Method)]
+    [AttributeUsage(AttributeTargets.Method | AttributeTargets.Property)]
     public class ConsoleCommand : Attribute
     {
         

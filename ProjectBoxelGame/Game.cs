@@ -42,6 +42,7 @@ namespace ProjectBoxelGame
             this.RenderDevice = new RenderDevice(this.Window);
             this.ConsoleTUI = new BoxelGame.ConsoleTUI(this.Console, this.RenderDevice.Device2D);
             DeveloperConsole.SetInstanceForCommands(this.RenderDevice);
+            DeveloperConsole.SetInstanceForCommands(this.ConsoleTUI);
         }
 
         public Game(VBL.vbl Level) : this()
@@ -114,7 +115,10 @@ namespace ProjectBoxelGame
             }
             if(this.Input.WasPressed(Keys.Oemtilde))
             {
-                this.ConsoleTUI.Open(this.Input);
+                if (this.ConsoleTUI.IsOpen)
+                    this.ConsoleTUI.Close();
+                else
+                    this.ConsoleTUI.Open(this.Input);
             }
             if (!this.ConsoleTUI.IsOpen)
                 this.Input.ResetKeyPresses();

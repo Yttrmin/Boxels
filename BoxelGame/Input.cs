@@ -22,6 +22,7 @@ namespace BoxelGame
         public string TextInput { get { return this.InputString.ToString(); } }
         public int DeltaX {get; private set;}
         public int DeltaY { get; private set; }
+        public bool BuildTextInput { get; set; }
         
         public Input(RenderForm Window)
         {
@@ -32,6 +33,7 @@ namespace BoxelGame
             this.PressedKeys = new HashSet<Keys>();
             this.KeyStates = new Dictionary<Keys, KeyState>();
             this.InputString = new StringBuilder();
+            this.BuildTextInput = false;
             foreach(Keys KeyEnum in Enum.GetValues(typeof(Keys)))
             {
                 this.KeyStates[KeyEnum] = KeyState.KeyUp;
@@ -73,6 +75,10 @@ namespace BoxelGame
         public void ResetKeyPresses()
         {
             this.PressedKeys.Clear();
+        }
+
+        public void ResetInputString()
+        {
             this.InputString.Clear();
         }
 
@@ -81,11 +87,20 @@ namespace BoxelGame
             KeyStates[Args.Key] = Args.State;
             if (Args.State == KeyState.KeyUp)
                 this.PressedKeys.Add(Args.Key);
-            if (Args.State == KeyState.KeyDown)
+            if (this.BuildTextInput && Args.State == KeyState.KeyDown)
             {
                 var InputChar = KeyMap.KeysToChar(Args.Key);
                 if (char.IsLetter(InputChar) || char.IsNumber(InputChar) || char.IsPunctuation(InputChar) || InputChar == ' ')
+                {
                     this.InputString.Append(InputChar);
+                }
+                else if (Args.Key == Keys.Back)
+                {
+                    if (this.InputString.Length > 0)
+                    {
+                        this.InputString.Length -= 1;
+                    }
+                }
             }
             //System.Diagnostics.Trace.WriteLine(String.Format("Input: {0} is now {1}", Args.Key, Args.State));
         }

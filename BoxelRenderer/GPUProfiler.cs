@@ -22,7 +22,7 @@ namespace BoxelRenderer
 
     }
 
-    public class GPUProfiler : IDisposable
+    public sealed class GPUProfiler : IDisposable
     {
         public enum TimeStamp
         {
@@ -77,6 +77,7 @@ namespace BoxelRenderer
             this.Immediate = this.Device.ImmediateContext1;
             this.Queries = new Dictionary<TimeStamp, Query[]>();
             this.Timer = new Stopwatch();
+
             var QueryDesc = new QueryDescription()
                 {
                     Type = QueryType.TimestampDisjoint,
@@ -97,6 +98,7 @@ namespace BoxelRenderer
             this.Queries[TimeStamp.PipelineInformation][1] = new Query(this.Device, QueryDesc);
             this.Queries[TimeStamp.PipelineInformation][0].DebugName = TimeStamp.PipelineInformation.ToString() + "_0";
             this.Queries[TimeStamp.PipelineInformation][0].DebugName = TimeStamp.PipelineInformation.ToString() + "_1";
+
             QueryDesc = new QueryDescription()
             {
                 Type = QueryType.Timestamp,

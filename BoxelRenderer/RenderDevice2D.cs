@@ -25,6 +25,8 @@ namespace BoxelRenderer
             public ImagingFactory2 Factory { get; private set; }
             public int Width { get { return this.Context.PixelSize.Width; } }
             public int Height { get { return this.Context.PixelSize.Height; } }
+            public float DIPWidth { get { return this.Context.Size.Width; } }
+            public float DIPHeight { get { return this.Context.Size.Height; } }
 
             public RenderDevice2D(SharpDX.DXGI.Device2 DXGIDevice)
             {
@@ -109,6 +111,16 @@ namespace BoxelRenderer
                 this.DefaultBrush.Color = Color;
                 this.Context.BeginDraw();
                 this.Context.FillRectangle(Rect, this.DefaultBrush);
+                this.Context.EndDraw();
+                this.DefaultBrush.Color = OldColor;
+            }
+
+            public void DrawLine(Vector2 Point0, Vector2 Point1, Color Color)
+            {
+                var OldColor = this.DefaultBrush.Color;
+                this.DefaultBrush.Color = Color;
+                this.Context.BeginDraw();
+                this.Context.DrawLine(Point0, Point1, this.DefaultBrush);
                 this.Context.EndDraw();
                 this.DefaultBrush.Color = OldColor;
             }
