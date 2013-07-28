@@ -48,6 +48,7 @@
       <HintPath>..\..\..\..\SharpDX-nightly\Bin\DirectX11_1-net40\SharpDX.RawInput.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
@@ -115,7 +116,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UpdateFileVersion="True" BuildVersion_BuildVersioningStyle="None.None.None.Increment" />
+      <UserProperties BuildVersion_BuildVersioningStyle="None.None.None.Increment" BuildVersion_UpdateFileVersion="True" />
     </VisualStudio>
   </ProjectExtensions>
   <Import Project="..\packages\PostSharp.3.0.30\tools\PostSharp.targets" Condition="Exists('..\packages\PostSharp.3.0.30\tools\PostSharp.targets')" />

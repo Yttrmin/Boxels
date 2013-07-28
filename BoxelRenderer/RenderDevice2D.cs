@@ -27,7 +27,6 @@ namespace BoxelRenderer
             public int Height { get { return this.Context.PixelSize.Height; } }
             public float DIPWidth { get { return this.Context.Size.Width; } }
             public float DIPHeight { get { return this.Context.Size.Height; } }
-
             public RenderDevice2D(SharpDX.DXGI.Device2 DXGIDevice)
             {
                 Trace.WriteLine("Initializing Direct2D1...");

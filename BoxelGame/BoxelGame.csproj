@@ -55,6 +55,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ConfigAttribute.cs" />
+    <Compile Include="ConsoleCommandHelpers.cs" />
     <Compile Include="ConsoleTUI.cs" />
     <Compile Include="CPUProfiler.cs" />
     <Compile Include="DeveloperConsole.cs" />

@@ -43,6 +43,13 @@ namespace ProjectBoxelGame
             this.ConsoleTUI = new BoxelGame.ConsoleTUI(this.Console, this.RenderDevice.Device2D);
             DeveloperConsole.SetInstanceForCommands(this.RenderDevice);
             DeveloperConsole.SetInstanceForCommands(this.ConsoleTUI);
+            DeveloperConsole.SetInstanceForCommands(this);
+        }
+
+        [ConsoleCommand]
+        private Object TestConfig(string PropertyName)
+        {
+            return System.Configuration.ConfigurationManager.AppSettings[PropertyName];
         }
 
         public Game(VBL.vbl Level) : this()

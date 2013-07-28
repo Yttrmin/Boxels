@@ -5,10 +5,10 @@ using System.Text;
 using System.Threading.Tasks;
 using PostSharp;
 
-namespace BoxelGame
+namespace BoxelCommon
 {
     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Property)]
-    public class ConsoleCommand : Attribute
+    public class ConsoleCommandAttribute : Attribute
     {
         
     }

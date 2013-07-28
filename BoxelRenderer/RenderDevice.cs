@@ -7,8 +7,8 @@ using SharpDX.Direct3D;
 using SharpDX.Windows;
 using SharpDX.Direct3D11;
 using Device1 = SharpDX.DXGI.Device1;
-using BoxelGame;
 using System.IO;
+using BoxelCommon;
 
 namespace BoxelRenderer
 {

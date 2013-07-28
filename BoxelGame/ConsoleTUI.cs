@@ -17,6 +17,8 @@ namespace BoxelGame
         private StringBuilder ConsoleHistory;
         private RectangleF ConsoleArea, CursorArea, InputTextArea, HistoryArea;
         private Vector2 DividerPoint0, DividerPoint1;
+        [ConsoleCommand]
+        private int ConsoleHeight { get; set; }
         public bool IsOpen { get; private set; }
         public ConsoleTUI(DeveloperConsole Console, BoxelRenderer.RenderDevice.RenderDevice2D RenderDevice)
         {
@@ -78,14 +80,27 @@ namespace BoxelGame
         {
             this.ConsoleHistory.Clear();
         }
+
+        //@TODO - Clean up. A lot.
         private void Execute()
         {
-            var Tokens = this.InputString.Split(' ');
+            System.Diagnostics.Trace.WriteLine(String.Format("Console: {0}", this.InputString));
+            var Tokens = this.ConcatenateStringParameters(this.InputString.Split(' '));
+            this.Print("> " + this.InputString);
+            this.InputString = String.Empty;
             if (Tokens.Length > 0)
             {
+                String[] StringParameters = null;
+                if (Tokens.Length > 1)
+                {
+                    StringParameters = new String[Tokens.Length - 1];
+                    Array.Copy(Tokens, 1, StringParameters, 0, StringParameters.Length);
+                }
+                else
+                    StringParameters = new String[0];
                 Object[] Parameters = new Object[0];
                 var Command = Tokens[0];
-                var Info = this.Console.GetCommand(Command);
+                var Info = this.Console.Lookup(Command, StringParameters);
                 if (Info == null)
                 {
                     this.Print("No such command found.");
@@ -93,36 +108,48 @@ namespace BoxelGame
                 }
                 if (Tokens.Length > 1)
                 {
-                    String[] StringParameters = new String[Tokens.Length - 1];
-                    Array.Copy(Tokens, 1, StringParameters, 0, StringParameters.Length);
-                    Parameters = ExtractParameters(Info, StringParameters);
-                    if(Parameters == null)
+                    string ErrorMessage;
+                    Parameters = ExtractParameters(Info, StringParameters, out ErrorMessage);
+                    if(ErrorMessage != null)
                     {
-                        this.Print("Malformed parameters. Aborting call.");
+                        this.Print(ErrorMessage);
                         return;
                     }
                 }
                 var Result = this.Console.Execute(Command, Parameters);
-                this.Print("> " + this.InputString);
-                if(Result != null)
+                if(Result != String.Empty)
                 {
                     this.ConsoleHistory.AppendLine(Result);
                 }
             }
-            this.InputString = String.Empty;
         }
 
-        private Object[] ExtractParameters(BoxelGame.DeveloperConsole.ExecMethod Info, string[] SplitText)
+        private Object[] ExtractParameters(ConsoleCommandInfo Info, string[] SplitText, out string ErrorMessage)
         {
-            SplitText = this.ConcatenateStringParameters(SplitText);
             var Result = new Object[SplitText.Length];
             int i = 0;
             foreach(var Parameter in Info.Method.GetParameters())
             {
                 System.Diagnostics.Trace.WriteLine(String.Format("Converting parameter {0} of type {1}...", i, Parameter.ParameterType));
-                Result[i] = Convert.ChangeType(SplitText[i], Parameter.ParameterType);
+                try
+                {
+                    Result[i] = Convert.ChangeType(SplitText[i], Parameter.ParameterType);
+                }
+                catch(FormatException)
+                {
+                    ErrorMessage = String.Format(@"Call aborted. Parameter {0}, value ({1}) could not be converted to type ""{2}.{3}"".",
+                        i + 1, SplitText[i], Parameter.ParameterType.Namespace, Parameter.ParameterType.Name);
+                    return null;
+                }
+                catch (OverflowException)
+                {
+                    ErrorMessage = String.Format(@"Call aborted. Parameter {0}, value ({1}) can not fit inside type ""{2}.{3}"".",
+                        i + 1, SplitText[i], Parameter.ParameterType.Namespace, Parameter.ParameterType.Name);
+                    return null;
+                }
                 i++;
             }
+            ErrorMessage = null;
             return Result;
         }
 
@@ -140,11 +167,13 @@ namespace BoxelGame
                         return null;
                     InText = true;
                     TextStart = i;
+                    SplitText[i] = SplitText[i].Substring(1);
                 }
-                else if(Text.EndsWith("\""))
+                if(Text.EndsWith("\""))
                 {
                     if (!InText)
                         return null;
+                    SplitText[i] = SplitText[i].Substring(0, SplitText[i].Length - 1);
                     var Builder = new StringBuilder();
                     for(var u = TextStart; u <= i; u++)
                     {
