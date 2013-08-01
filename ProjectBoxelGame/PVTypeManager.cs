@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace ProjectBoxelGame
 {
-    class PVTypeManager : BoxelTypes<ICubeBoxelType>
+    sealed class PVTypeManager : BoxelTypes<ICubeBoxelType>
     {
         public PVTypeManager() : base()
         {

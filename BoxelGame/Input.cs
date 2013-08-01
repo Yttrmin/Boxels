@@ -12,7 +12,7 @@ using System.Windows.Input;
 
 namespace BoxelGame
 {
-    public partial class Input
+    public sealed partial class Input
     {
         private IDictionary<Keys, KeyState> KeyStates;
         private ISet<Keys> PressedKeys;

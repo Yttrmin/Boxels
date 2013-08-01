@@ -19,9 +19,9 @@ namespace BoxelRenderer
         {
             private Device Device;
             public DeviceContext Context { get; private set; }
-            private SharpDX.DirectWrite.Factory1 DWriteFactory;
+            public SharpDX.DirectWrite.Factory1 DWriteFactory { get; private set; }
             private SolidColorBrush DefaultBrush;
-            private TextFormat DefaultFont;
+            public TextFormat DefaultFont { get; private set; }
             public ImagingFactory2 Factory { get; private set; }
             public int Width { get { return this.Context.PixelSize.Width; } }
             public int Height { get { return this.Context.PixelSize.Height; } }
@@ -104,6 +104,16 @@ namespace BoxelRenderer
                 this.DefaultBrush.Color = OldColor;
             }
 
+            public void DrawTextLayout(TextLayout Layout, Vector2 Position, Color TextColor)
+            {
+                var OldColor = this.DefaultBrush.Color;
+                this.DefaultBrush.Color = TextColor;
+                this.Context.BeginDraw();
+                this.Context.DrawTextLayout(Position, Layout, this.DefaultBrush, DrawTextOptions.Clip);
+                this.Context.EndDraw();
+                this.DefaultBrush.Color = OldColor;
+            }
+
             public void FillRectangle(RectangleF Rect, Color Color)
             {
                 var OldColor = this.DefaultBrush.Color;
@@ -124,9 +134,49 @@ namespace BoxelRenderer
                 this.DefaultBrush.Color = OldColor;
             }
 
+            /// <summary>
+            /// 
+            /// </summary>
+            /// <param name="Format"></param>
+            /// <returns>How much vertical space is required for one line of text in DIPs.</returns>
+            public static float GetVerticalSize(TextFormat Format)
+            {
+                int Index;
+                if (!Format.FontCollection.FindFamilyName(Format.FontFamilyName, out Index))
+                    throw new Exception("FindFamilyName failed.");
+                var Family = Format.FontCollection.GetFontFamily(Index);
+                var Font = Family.GetFirstMatchingFont(Format.FontWeight, Format.FontStretch, Format.FontStyle);
+                var Metrics = Font.Metrics;
+                var Ratio = Format.FontSize / Metrics.DesignUnitsPerEm;
+                return (Metrics.Ascent + Metrics.Descent + Metrics.LineGap) * Ratio;
+            }
+
+            public static int GetVerticalSpaceNeeded(TextFormat Format, int DesiredLineCount)
+            {
+                var VerticalSize = GetVerticalSize(Format);
+                return (int)Math.Ceiling(DesiredLineCount * VerticalSize);
+            }
+
+            public static float GetHorizontalSize(TextFormat Format)
+            {
+                throw new NotImplementedException();
+            }
+
+            public static int GetLineCount(string Text, int CharactersPerLine)
+            {
+                var Chunks = Text.Split(new[] {Environment.NewLine}, StringSplitOptions.RemoveEmptyEntries);
+                int Count = Chunks.Length;
+                foreach(var Chunk in Chunks)
+                {
+                    Count += Chunk.Length / CharactersPerLine;
+                }
+                return Count;
+            }
+
             public void Draw()
             {
                 return;
+                /*
                 var SourceEffect = new Turbulence(this.Context);
                 var BlurEffect = new DirectionalBlur(this.Context);
                 BlurEffect.SetInputEffect(0, SourceEffect);
@@ -143,6 +193,7 @@ namespace BoxelRenderer
                     this.Context.DrawEllipse(new Ellipse(new Vector2(R.NextFloat(0, Width), R.NextFloat(0, Height)), R.NextFloat(0, Width), R.NextFloat(0, Width)), this.DefaultBrush);
                 }
                 this.Context.EndDraw();
+                 * */
             }
 
 

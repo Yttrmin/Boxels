@@ -9,7 +9,7 @@ using BoxelCommon;
 
 namespace BoxelGame
 {
-    public class DeveloperConsole
+    public sealed class DeveloperConsole
     {
         private readonly IDictionary<string, IConsoleCommand> MethodMap;
         private readonly IDictionary<string, string> Aliases;
@@ -73,6 +73,11 @@ namespace BoxelGame
             Object Instance;
             InstanceMap.TryGetValue(Command.DeclaringType, out Instance);
             return this.CommandResultToString(Info.Delegate(Instance, Parameters), Info.Method.ReturnType);
+        }
+
+        public bool CommandNameExists(string CommandName)
+        {
+            return this.MethodMap.ContainsKey(CommandName.ToLower());
         }
 
         public ConsoleCommandInfo Lookup(string CommandName, object[] Parameters)

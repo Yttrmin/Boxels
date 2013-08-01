@@ -1,43 +1,58 @@
 ﻿using BoxelCommon;
 using SharpDX;
+using SharpDX.DirectWrite;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Keys = System.Windows.Forms.Keys;
+using RenderDevice2D = BoxelRenderer.RenderDevice.RenderDevice2D;
 
 namespace BoxelGame
 {
-    public class ConsoleTUI : ITickable
+    public sealed class ConsoleTUI : ITickable
     {
+        private struct HistoryEntry
+        {
+            string Text;
+            int LineCount;
+        }
         private DeveloperConsole Console;
         private Input Input;
         private string InputString;
         private StringBuilder ConsoleHistory;
         private RectangleF ConsoleArea, CursorArea, InputTextArea, HistoryArea;
         private Vector2 DividerPoint0, DividerPoint1;
+        private readonly Color ConsoleBackgroundColor;
+        private TextLayout ConsoleHistoryLayout;
+        private int _ConsoleLineHeight;
         [ConsoleCommand]
-        private int ConsoleHeight { get; set; }
+        private int ConsoleLineHeight { get { return _ConsoleLineHeight; } set { _ConsoleLineHeight = value; ConsoleBoundsNeedUpdate = true; } }
+        private bool ConsoleBoundsNeedUpdate;
         public bool IsOpen { get; private set; }
         public ConsoleTUI(DeveloperConsole Console, BoxelRenderer.RenderDevice.RenderDevice2D RenderDevice)
         {
             this.Console = Console;
             this.ConsoleHistory = new StringBuilder();
-            ConsoleArea = new RectangleF(0, 0, RenderDevice.Width, RenderDevice.Height * 0.25f);
-            HistoryArea = new RectangleF(0, 0, RenderDevice.Width, RenderDevice.Height * 0.25f - 16);
-            CursorArea = new RectangleF(0, RenderDevice.Height * 0.25f - 16, 16, 16);
-            InputTextArea = new RectangleF(16, RenderDevice.Height * 0.25f - 16, RenderDevice.Width, 16);
-            DividerPoint0 = new Vector2(0, RenderDevice.Height * 0.25f - 16);
-            DividerPoint1 = new Vector2(RenderDevice.Width, RenderDevice.Height * 0.25f - 16);
+            this.ConsoleLineHeight = 16;
+            this.ConsoleBackgroundColor = new Color(0, 0, 0, 128);
         }
         public void Render(BoxelRenderer.RenderDevice.RenderDevice2D RenderDevice)
         {
-            RenderDevice.FillRectangle(ConsoleArea, Color.Black);
+            if(this.ConsoleBoundsNeedUpdate)
+            {
+                this.CalculateConsoleBounds(RenderDevice);
+                this.ConsoleBoundsNeedUpdate = false;
+            }
+            //@TODO - Dispose. Only update when dirty.
+            this.ConsoleHistoryLayout = new TextLayout(RenderDevice.DWriteFactory, ConsoleHistory.ToString(), RenderDevice.DefaultFont,
+                    HistoryArea.Right, HistoryArea.Bottom);
+            RenderDevice.FillRectangle(ConsoleArea, this.ConsoleBackgroundColor);
             RenderDevice.DrawLine(DividerPoint0, DividerPoint1, Color.White);
             RenderDevice.DrawText(">", CursorArea, Color.White);
             RenderDevice.DrawText(this.InputString, InputTextArea, Color.White);
-            RenderDevice.DrawText(this.ConsoleHistory.ToString(), this.HistoryArea, Color.White);
+            RenderDevice.DrawTextLayout(ConsoleHistoryLayout, Vector2.Zero, Color.White);
         }
 
         public void Tick(double DeltaTime)
@@ -81,6 +96,16 @@ namespace BoxelGame
             this.ConsoleHistory.Clear();
         }
 
+        private void CalculateConsoleBounds(RenderDevice2D RenderDevice)
+        {
+            this.ConsoleArea = new RectangleF(0, 0, RenderDevice.Width, RenderDevice2D.GetVerticalSpaceNeeded(RenderDevice.DefaultFont, this.ConsoleLineHeight + 1));
+            this.HistoryArea = new RectangleF(0, 0, RenderDevice.Width, RenderDevice2D.GetVerticalSpaceNeeded(RenderDevice.DefaultFont, this.ConsoleLineHeight));
+            this.CursorArea = new RectangleF(0, this.HistoryArea.Bottom, 16, 20);
+            this.InputTextArea = new RectangleF(this.CursorArea.X + 16, this.CursorArea.Y, 256, 20);
+            this.DividerPoint0 = new Vector2(0, this.HistoryArea.Bottom);
+            this.DividerPoint1 = new Vector2(RenderDevice.Width, this.DividerPoint0.Y);
+        }
+
         //@TODO - Clean up. A lot.
         private void Execute()
         {
@@ -103,7 +128,10 @@ namespace BoxelGame
                 var Info = this.Console.Lookup(Command, StringParameters);
                 if (Info == null)
                 {
-                    this.Print("No such command found.");
+                    if (this.Console.CommandNameExists(Command))
+                        this.Print(String.Format("No overload exists that takes {0} parameters.", StringParameters.Length));
+                    else
+                        this.Print("No such command found.");
                     return;
                 }
                 if (Tokens.Length > 1)
@@ -130,7 +158,6 @@ namespace BoxelGame
             int i = 0;
             foreach(var Parameter in Info.Method.GetParameters())
             {
-                System.Diagnostics.Trace.WriteLine(String.Format("Converting parameter {0} of type {1}...", i, Parameter.ParameterType));
                 try
                 {
                     Result[i] = Convert.ChangeType(SplitText[i], Parameter.ParameterType);

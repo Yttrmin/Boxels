@@ -7,7 +7,7 @@ using SharpDX;
 
 namespace BoxelLib
 {
-    public class BasicCamera : ICamera
+    public sealed class BasicCamera : ICamera
     {
         public Vector3 Position { get; private set; }
         public Vector3 LookDirection { get; private set; }

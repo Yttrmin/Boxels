@@ -8,7 +8,7 @@ using PostSharp;
 namespace BoxelCommon
 {
     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Property)]
-    public class ConsoleCommandAttribute : Attribute
+    public sealed class ConsoleCommandAttribute : Attribute
     {
         
     }

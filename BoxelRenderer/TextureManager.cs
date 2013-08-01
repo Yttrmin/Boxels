@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace BoxelRenderer
 {
-    internal class TextureManager : IDisposable
+    internal sealed class TextureManager : IDisposable
     {
         private IDictionary<string, Texture2D> TextureMap;
         private IList<Texture2D> TexturesByIndex;

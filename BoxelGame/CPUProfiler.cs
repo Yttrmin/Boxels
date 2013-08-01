@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace BoxelGame
 {
-    public class CPUProfiler
+    public sealed class CPUProfiler
     {
         private readonly Stopwatch Timer = new Stopwatch();
 

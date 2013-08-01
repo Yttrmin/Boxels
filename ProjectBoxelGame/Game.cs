@@ -14,6 +14,8 @@ using System.Drawing;
 using SharpDX.RawInput;
 using SharpDX.Multimedia;
 using BoxelGame;
+using System.IO;
+using System.IO.MemoryMappedFiles;
 
 namespace ProjectBoxelGame
 {
@@ -127,15 +129,19 @@ namespace ProjectBoxelGame
                 else
                     this.ConsoleTUI.Open(this.Input);
             }
-            if (!this.ConsoleTUI.IsOpen)
-                this.Input.ResetKeyPresses();
             this.Camera.Tick(DeltaTime);
             this.ConsoleTUI.Tick(DeltaTime);
             this.Manager.Render(this.Camera);
             if (this.ConsoleTUI.IsOpen)
+            {
                 this.ConsoleTUI.Render(this.RenderDevice.Device2D);
+            }
+            else
+            {
+                this.Input.ResetMouse(this.MouseEnabled);
+                this.Input.ResetKeyPresses();
+            }
             this.RenderDevice.Render();
-            this.Input.ResetMouse(this.MouseEnabled);
         }
 
         /// <summary>

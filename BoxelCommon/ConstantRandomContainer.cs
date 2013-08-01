@@ -10,7 +10,7 @@ using ProtoBuf;
 namespace BoxelCommon
 {
     [ProtoContract]
-    public class ConstantRandomContainer : IBoxelContainer
+    public sealed class ConstantRandomContainer : IBoxelContainer
     {
         /// <summary>
         /// Number of boxels per chunk in each dimension.
@@ -146,7 +146,7 @@ namespace BoxelCommon
     }
 
     [ProtoContract]
-    internal class ConstantChunk : IChunk
+    internal sealed class ConstantChunk : IChunk
     {
         [ProtoMember(1)]
         private readonly IDictionary<int, IBoxel> Boxels;

@@ -31,7 +31,7 @@ using System.IO;
 namespace CommonDX
 {
     [Obsolete]
-    public class TextureLoader
+    public static class TextureLoader
     {
         /// <summary>
         /// Loads a bitmap using WIC.

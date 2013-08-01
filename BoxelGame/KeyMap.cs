@@ -11,7 +11,7 @@ namespace BoxelGame
 {
     partial class Input
     {
-        internal static class KeyMap
+        private static class KeyMap
         {
             private enum MapType : uint
             {
