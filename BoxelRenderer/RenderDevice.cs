@@ -61,10 +61,11 @@ namespace BoxelRenderer
 
         public void Render()
         {
+            PresentParameters Params = new PresentParameters();
             this.Device2D.Draw();
             this.Profiler.Render(this.Device2D);
             this.Profiler.RecordTimeStamp(GPUProfiler.TimeStamp.Draw2D);
-            this.SwapChain.Present(1, PresentFlags.None);
+            this.SwapChain.Present(1, PresentFlags.None, Params);
             if (this.PendingScreenshot || this.Recording)
             {
                 this.CopyBackBuffer();

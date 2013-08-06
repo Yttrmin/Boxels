@@ -9,11 +9,6 @@ using System.Threading.Tasks;
 
 namespace BoxelRenderer
 {
-    interface IGPUProfiler
-    {
-
-    }
-
     /// <summary>
     /// Profiler that performs no GPU profiling, just FPS and CPU delta time.
     /// </summary>
@@ -153,7 +148,7 @@ namespace BoxelRenderer
             }
         }
 
-        public void Render(BoxelRenderer.RenderDevice.RenderDevice2D RenderDevice)
+        public void Render(RenderDevice2D RenderDevice)
         {
             var Builder = new StringBuilder();
             Builder.AppendLine(String.Format("FPS: {0:00.000}", this.PreviousStats.FrameRate));

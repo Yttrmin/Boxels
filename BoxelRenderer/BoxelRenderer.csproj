@@ -69,6 +69,7 @@
     <Compile Include="CubeRendering\CubeNoGSRenderer.cs" />
     <Compile Include="CubeRendering\CubeTypeManager.cs" />
     <Compile Include="GPUProfiler.cs" />
+    <Compile Include="IRenderables.cs" />
     <Compile Include="MarchingCubesRenderer.cs" />
     <Compile Include="NullRenderer.cs" />
     <Compile Include="PointRenderer.cs" />
@@ -109,7 +110,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UpdateFileVersion="True" BuildVersion_BuildVersioningStyle="None.None.None.Increment" />
+      <UserProperties BuildVersion_BuildVersioningStyle="None.None.None.Increment" BuildVersion_UpdateFileVersion="True" />
     </VisualStudio>
   </ProjectExtensions>
   <Import Project="..\packages\PostSharp.3.0.30\tools\PostSharp.targets" Condition="Exists('..\packages\PostSharp.3.0.30\tools\PostSharp.targets')" />

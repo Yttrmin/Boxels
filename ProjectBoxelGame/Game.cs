@@ -44,6 +44,7 @@ namespace ProjectBoxelGame
             this.RenderDevice = new RenderDevice(this.Window);
             this.ConsoleTUI = new BoxelGame.ConsoleTUI(this.Console, this.RenderDevice.Device2D);
             DeveloperConsole.SetInstanceForCommands(this.RenderDevice);
+            DeveloperConsole.SetInstanceForCommands(this.RenderDevice.Device2D);
             DeveloperConsole.SetInstanceForCommands(this.ConsoleTUI);
             DeveloperConsole.SetInstanceForCommands(this);
         }

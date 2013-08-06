@@ -1,4 +1,5 @@
 ﻿using BoxelCommon;
+using BoxelRenderer;
 using SharpDX;
 using SharpDX.DirectWrite;
 using System;
@@ -7,38 +8,35 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Keys = System.Windows.Forms.Keys;
-using RenderDevice2D = BoxelRenderer.RenderDevice.RenderDevice2D;
 
 namespace BoxelGame
 {
     public sealed class ConsoleTUI : ITickable
     {
-        private struct HistoryEntry
-        {
-            string Text;
-            int LineCount;
-        }
         private DeveloperConsole Console;
         private Input Input;
         private string InputString;
-        private StringBuilder ConsoleHistory;
         private RectangleF ConsoleArea, CursorArea, InputTextArea, HistoryArea;
         private Vector2 DividerPoint0, DividerPoint1;
         private readonly Color ConsoleBackgroundColor;
         private TextLayout ConsoleHistoryLayout;
+        private float HorizontalSizePerCharacter;
+        private readonly IList<string> HistoryLines;
+        private int HistoryIndex;
         private int _ConsoleLineHeight;
         [ConsoleCommand]
         private int ConsoleLineHeight { get { return _ConsoleLineHeight; } set { _ConsoleLineHeight = value; ConsoleBoundsNeedUpdate = true; } }
         private bool ConsoleBoundsNeedUpdate;
         public bool IsOpen { get; private set; }
-        public ConsoleTUI(DeveloperConsole Console, BoxelRenderer.RenderDevice.RenderDevice2D RenderDevice)
+        public ConsoleTUI(DeveloperConsole Console, RenderDevice2D RenderDevice)
         {
             this.Console = Console;
-            this.ConsoleHistory = new StringBuilder();
             this.ConsoleLineHeight = 16;
             this.ConsoleBackgroundColor = new Color(0, 0, 0, 128);
+            this.HorizontalSizePerCharacter = RenderDevice.GetHorizontalSize(RenderDevice.DefaultFont);
+            this.HistoryLines = new List<string>();
         }
-        public void Render(BoxelRenderer.RenderDevice.RenderDevice2D RenderDevice)
+        public void Render(RenderDevice2D RenderDevice)
         {
             if(this.ConsoleBoundsNeedUpdate)
             {
@@ -46,7 +44,13 @@ namespace BoxelGame
                 this.ConsoleBoundsNeedUpdate = false;
             }
             //@TODO - Dispose. Only update when dirty.
-            this.ConsoleHistoryLayout = new TextLayout(RenderDevice.DWriteFactory, ConsoleHistory.ToString(), RenderDevice.DefaultFont,
+            var Builder = new StringBuilder();
+            var StartIndex = Math.Max(this.HistoryIndex - this.ConsoleLineHeight, 0);
+            for (var i = StartIndex; i < this.HistoryIndex; i++ )
+            {
+                Builder.AppendLine(this.HistoryLines[i]);
+            }
+            this.ConsoleHistoryLayout = new TextLayout(RenderDevice.DWriteFactory, Builder.ToString(), RenderDevice.DefaultFont,
                     HistoryArea.Right, HistoryArea.Bottom);
             RenderDevice.FillRectangle(ConsoleArea, this.ConsoleBackgroundColor);
             RenderDevice.DrawLine(DividerPoint0, DividerPoint1, Color.White);
@@ -66,6 +70,10 @@ namespace BoxelGame
                     this.Input.ResetInputString();
                     this.InputString = String.Empty;
                 }
+                if (this.Input.WasPressed(Keys.PageUp))
+                    this.Scroll(-1);
+                if (this.Input.WasPressed(Keys.PageDown))
+                    this.Scroll(1);
                 this.Input.ResetKeyPresses();
             }
         }
@@ -87,13 +95,21 @@ namespace BoxelGame
 
         public void Print(string Text)
         {
-            this.ConsoleHistory.AppendLine(Text);
+            foreach (var Line in RenderDevice2D.BreakIntoLines(Text, (int)Math.Floor(this.HistoryArea.Right / this.HorizontalSizePerCharacter)))
+                this.HistoryLines.Add(Line);
+            this.HistoryIndex = this.HistoryLines.Count;
         }
 
         [ConsoleCommand]
         public void Clear()
         {
-            this.ConsoleHistory.Clear();
+            this.HistoryLines.Clear();
+            this.HistoryIndex = 0;
+        }
+
+        private void Scroll(int Delta)
+        {
+            this.HistoryIndex = Math.Min(this.HistoryLines.Count, Math.Max(this.ConsoleLineHeight, this.HistoryIndex + Delta));
         }
 
         private void CalculateConsoleBounds(RenderDevice2D RenderDevice)
@@ -147,7 +163,7 @@ namespace BoxelGame
                 var Result = this.Console.Execute(Command, Parameters);
                 if(Result != String.Empty)
                 {
-                    this.ConsoleHistory.AppendLine(Result);
+                    this.Print(Result);
                 }
             }
         }
