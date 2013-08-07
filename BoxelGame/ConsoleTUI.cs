@@ -125,9 +125,11 @@ namespace BoxelGame
         //@TODO - Clean up. A lot.
         private void Execute()
         {
-            System.Diagnostics.Trace.WriteLine(String.Format("Console: {0}", this.InputString));
-            var Tokens = this.ConcatenateStringParameters(this.InputString.Split(' '));
+            System.Diagnostics.Trace.WriteLine(String.Format("Console: {0}", this.InputString));        
             this.Print("> " + this.InputString);
+            if (String.IsNullOrWhiteSpace(this.InputString))
+                return;
+            var Tokens = this.ConcatenateStringParameters(this.InputString.Split(' '));
             this.InputString = String.Empty;
             if (Tokens.Length > 0)
             {

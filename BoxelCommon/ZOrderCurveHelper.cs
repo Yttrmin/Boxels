@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace BoxelCommon
 {
+    [System.Runtime.CompilerServices.CompilerGenerated]
     internal static class ZOrderCurveHelper
     {
         public static readonly int[] XWeave;

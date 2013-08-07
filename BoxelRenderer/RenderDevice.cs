@@ -71,6 +71,7 @@ namespace BoxelRenderer
                 this.CopyBackBuffer();
                 using (var Surface = this.ScreenshotTexture.QueryInterface<Surface2>())
                 {
+                    //@TODO - Use paths.
                     if (this.PendingScreenshot)
                     {
                         this.Device2D.SaveSurfaceToFile(String.Format("./{0}/ss_{1}.png", this.ScreenshotDirectory,

@@ -9,7 +9,6 @@ using SharpDX.Direct3D;
 using SharpDX.Direct3D11;
 using Buffer = SharpDX.Direct3D11.Buffer;
 using Device1 = SharpDX.Direct3D11.Device1;
-using CommonDX;
 using BoxelCommon;
 using System;
 
@@ -42,18 +41,17 @@ namespace BoxelRenderer
             this.BoxelTypes = BoxelTypes;
             this.Topology = Topology;
             this.CompileShaders(Device.D3DDevice, ShaderFileName, VertexEntryName, GeometryEntryName, PixelEntryName);
-            //this.Texture = new ShaderResourceView(Device, TextureLoader.CreateTexture2DFromBitmap(Device, TextureLoader.LoadBitmap(new SharpDX.WIC.ImagingFactory2(), "LinearBoxels.png")));
             this.TextureSampler = new SamplerState(Device.D3DDevice, new SamplerStateDescription()
             {
-                Filter = Filter.MinMagMipLinear,
+                Filter = Filter.Anisotropic,
                 AddressU = TextureAddressMode.Wrap,
                 AddressV = TextureAddressMode.Wrap,
                 AddressW = TextureAddressMode.Wrap,
                 BorderColor = SharpDX.Color.HotPink,
-                MinimumLod = float.MinValue,
+                MinimumLod = 0,
                 MaximumLod = float.MaxValue,
                 ComparisonFunction = Comparison.Never,
-                MaximumAnisotropy = 1,
+                MaximumAnisotropy = 16,
                 MipLodBias = 0
             });
             this.ConstructTextures(Device.D3DDevice);

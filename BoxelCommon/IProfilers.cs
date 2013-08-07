@@ -8,7 +8,7 @@ namespace BoxelCommon
 {
     public interface IProfiler
     {
-        void BeginFrame();
+        void BeginFrame(double DeltaTime);
         void EndFrame();
         void Begin(string ID);
         void End(string ID);

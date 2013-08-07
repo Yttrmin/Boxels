@@ -27,6 +27,7 @@ namespace ProjectBoxelGame
         private readonly ICamera Camera;
         private readonly Input Input;
         private readonly ConsoleTUI ConsoleTUI;
+        private readonly ICPUProfiler CPUProfiler;
         private bool MouseEnabled;
         private bool Resized;
         private const int Width = 1280;
@@ -40,8 +41,9 @@ namespace ProjectBoxelGame
             this.Window.MaximizeBox = true;
             this.Window.ClientSize = new System.Drawing.Size(Width, Height);
             this.Window.UserResized += (a, b) => { this.Resized = true; };
-            this.Camera = new BasicCamera(new Vector3(0, 10, 0), new Vector3(1, 0, 0), Width, Height);
+            this.Camera = new BasicCamera(new Vector3(0, 25, 0), new Vector3(1, 0, 0), Width, Height);
             this.RenderDevice = new RenderDevice(this.Window);
+            this.CPUProfiler = new CPUProfiler();
             this.ConsoleTUI = new BoxelGame.ConsoleTUI(this.Console, this.RenderDevice.Device2D);
             DeveloperConsole.SetInstanceForCommands(this.RenderDevice);
             DeveloperConsole.SetInstanceForCommands(this.RenderDevice.Device2D);
@@ -85,6 +87,7 @@ namespace ProjectBoxelGame
 
         public void Tick(double DeltaTime)
         {
+            this.CPUProfiler.BeginFrame(DeltaTime);
             this.RenderDevice.Profiler.StartFrame(DeltaTime);
             if (this.Resized)
             {
@@ -116,6 +119,8 @@ namespace ProjectBoxelGame
                     this.MouseEnabled = !this.MouseEnabled;
                 if (this.Input.WasPressed(Keys.F2))
                     this.RenderDevice.SetFullscreen();
+                if (this.Input.WasPressed(Keys.F3))
+                    this.RenderDevice.Screenshot();
 
                 if (this.MouseEnabled)
                 {
@@ -143,6 +148,7 @@ namespace ProjectBoxelGame
                 this.Input.ResetKeyPresses();
             }
             this.RenderDevice.Render();
+            this.CPUProfiler.EndFrame();
         }
 
         /// <summary>

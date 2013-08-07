@@ -17,7 +17,7 @@ namespace BoxelGame
             private long ElapsedTicks;
             private uint SampleCount;
             private Stopwatch Timer;
-            public float AverageTime { get { return (float)(this.ElapsedTicks / this.SampleCount) / Stopwatch.Frequency * 1000.0f; } }
+            public float AverageTime { get { return (this.ElapsedTicks / (float)this.SampleCount) / (float)Stopwatch.Frequency * 1000.0f; } }
 
             public Event(Stopwatch Timer)
             {
@@ -38,6 +38,7 @@ namespace BoxelGame
                     throw new InvalidOperationException("Event was not started.");
                 this.ElapsedTicks += Timer.ElapsedTicks - this.StartTime;
                 this.SampleCount++;
+                this.InProgress = false;
             }
 
             public void Reset()
@@ -48,35 +49,47 @@ namespace BoxelGame
         }
 
         private readonly IDictionary<string, Event> EventMap;
+        private readonly IList<string> DrawOrder;
         private readonly Stopwatch Timer;
         private readonly StringBuilder Builder;
+        private long TickCount;
+        private double DeltaTimeCount;
+        private long FrameCount;
         private const string FrameTimeID = "Frame Time";
 
         public CPUProfiler()
         {
             this.EventMap = new Dictionary<string, Event>();
+            this.DrawOrder = new List<string>();
             this.Timer = new Stopwatch();
             this.Builder = new StringBuilder();
         }
 
         public void PrepareIDs(params string[] OrderedIDs)
         {
-            throw new NotImplementedException();
+            foreach(var ID in OrderedIDs)
+            {
+                this.DrawOrder.Add(ID);
+            }
         }
 
-        public void BeginFrame()
+        public void BeginFrame(double DeltaTime)
         {
-            this.Begin("Frame Time");
+            this.Timer.Start();
+            this.DeltaTimeCount += DeltaTime;
+            this.FrameCount++;
         }
 
         public void EndFrame()
         {
-            this.End("Frame Time");
-            this.Timer.Stop();
-            if(this.Timer.ElapsedTicks / Stopwatch.Frequency >= 1.0f)
+            
+            this.TickCount += this.Timer.ElapsedTicks;
+            if(TickCount / Stopwatch.Frequency >= 1.0f)
             {
                 this.UpdateString();
+                this.TickCount = 0;
             }
+            this.Timer.Restart();
         }
 
         public void Begin(string ID)
@@ -97,11 +110,17 @@ namespace BoxelGame
         private void UpdateString()
         {
             this.Builder.Clear();
-            Builder.Append(String.Format("Frame Time: {0}ms", this.GetEvent(FrameTimeID).AverageTime));
-            foreach(var Key in this.EventMap.Keys)
+            Builder.Append(String.Format("Frame Time: {0}ms", this.DeltaTimeCount / this.FrameCount * 1000));
+            foreach(var Key in this.DrawOrder)
             {
-                Builder.Append(String.Format("   {0}: {1}ms", Key, this.GetEvent(Key).AverageTime));
+                var Event = this.GetEvent(Key);
+                Builder.Append(String.Format("  {0}: {1}ms", Key, Event.AverageTime));
+                Event.Reset();
+
             }
+            this.DeltaTimeCount = 0;
+            this.FrameCount = 0;
+            Trace.WriteLine(this.ToString());
         }
 
         private Event GetEvent(string ID)
