@@ -15,55 +15,58 @@ namespace BoxelRenderer
         private IList<Texture2D> TexturesByIndex;
         private Device1 Device;
         private ImagingFactory2 ImagingFactory;
-        private int Width=-1;
-        private int Height=-1;
+        private readonly Size2 Size;
         private const bool UseMipMaps = true;
 
         public Texture2D this[string Name]
         {
             get
             {
-                if (!this.TextureMap.ContainsKey(Name))
-                {
-                    this.Load(Name);
-                }
                 return this.TextureMap[Name][0];
             }
         }
 
-        public TextureManager(Device1 Device)
+        public TextureManager(Device1 Device, ImagingFactory2 Factory, Size2 ImageSize)
         {
             this.TextureMap = new Dictionary<string, IList<Texture2D>>();
-            this.TexturesByIndex = new List<Texture2D>();
             this.Device = Device;
-            this.ImagingFactory = new ImagingFactory2();
+            this.Size = ImageSize;
+            this.ImagingFactory = Factory;
+            this.TexturesByIndex = new List<Texture2D>();
         }
 
         public void Load(string Path)
         {
             if (this.TextureMap.ContainsKey(Path))
-                return;
+                throw new Exception("Key already exists.");
 
-            using(var Source = this.LoadBitmap(this.ImagingFactory, Path))
+            using(var Source = LoadBitmap(this.ImagingFactory, Path))
             {
-                this.TextureMap[Path] = new Texture2D[this.GetMipMapSizes(Source.Size).Count()];
-                int i = 0;
-                foreach(var Size in this.GetMipMapSizes(Source.Size))
-                {
-                    using(var Scaler = new BitmapScaler(this.ImagingFactory))
-                    {
-                        Scaler.Initialize(Source, Size.Width, Size.Height, BitmapInterpolationMode.Fant);
-                        this.TextureMap[Path][i] = this.CreateTexture2DFromBitmap(this.Device, Scaler);
-                        this.TextureMap[Path][i].DebugName = String.Format("{0}__MIP_{1}", Path, i);
-                    }
-                    i++;
-                }
+                this.Add(Path, Source);
             }
-            if (this.TextureMap.Count == 1)
+        }
+
+        public void Add(string Path, BitmapSource Source)
+        {
+            this.TextureMap[Path] = new Texture2D[this.GetMipMapSizes(Source.Size).Count()];
+            int i = 0;
+            foreach (var Size in this.GetMipMapSizes(Source.Size))
             {
-                var Desc = this.TextureMap.Values.ElementAt(0)[0].Description;
-                this.Width = Desc.Width;
-                this.Height = Desc.Height;
+                using (var Scaler = new BitmapScaler(this.ImagingFactory))
+                {
+                    Scaler.Initialize(Source, Size.Width, Size.Height, BitmapInterpolationMode.Fant);
+                    this.TextureMap[Path][i] = this.CreateTexture2DFromBitmap(this.Device, Scaler);
+                    this.TextureMap[Path][i].DebugName = String.Format("{0}__MIP_{1}", Path, i);
+                    var Desc = this.TextureMap[Path][i].Description;
+                    if (i == 0 && (Desc.Width != this.Size.Width || Desc.Height != this.Size.Height))
+                    {
+                        this.TextureMap[Path][i].Dispose();
+                        this.TextureMap.Remove(Path);
+                        throw new InvalidOperationException(String.Format("Tried to load a {0}x{1} texture. This instance only supports {2}x{3}.",
+                            Desc.Width, Desc.Height, this.Size.Width, this.Size.Height));
+                    }
+                }
+                i++;
             }
         }
 
@@ -99,8 +102,8 @@ namespace BoxelRenderer
                     Format = SharpDX.DXGI.Format.B8G8R8A8_UNorm,
                     OptionFlags = ResourceOptionFlags.None,
                     Usage = ResourceUsage.Immutable,
-                    Width = this.Width,
-                    Height = this.Height,
+                    Width = this.Size.Width,
+                    Height = this.Size.Height,
                     MipLevels = MipCount,
                     SampleDescription = new SharpDX.DXGI.SampleDescription(1, 0),
                 }, DataBoxes))
@@ -123,7 +126,7 @@ namespace BoxelRenderer
         /// <param name="deviceManager"></param>
         /// <param name="Filename"></param>
         /// <returns>The image file as a BitmapSource. Make sure to Dispose() of it or use a using statement.</returns>
-        private BitmapSource LoadBitmap(ImagingFactory2 Factory, string Filename)
+        public static BitmapSource LoadBitmap(ImagingFactory2 Factory, string Filename)
         {
             var formatConverter = new SharpDX.WIC.FormatConverter(Factory);
             using (var bitmapDecoder = new SharpDX.WIC.BitmapDecoder(Factory, Filename, SharpDX.WIC.DecodeOptions.CacheOnDemand))

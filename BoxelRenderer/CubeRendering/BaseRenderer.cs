@@ -11,6 +11,8 @@ using Buffer = SharpDX.Direct3D11.Buffer;
 using Device1 = SharpDX.Direct3D11.Device1;
 using BoxelCommon;
 using System;
+using SharpDX;
+using SharpDX.WIC;
 
 namespace BoxelRenderer
 {
@@ -31,7 +33,9 @@ namespace BoxelRenderer
         private ShaderResourceView Texture;
         private int TextureCount;
         private SamplerState TextureSampler;
-        private TextureManager TextureManager;
+        private readonly ImagingFactory2 ImagingFactory;
+        private readonly IDictionary<Size2, TextureManager> TextureManagers;
+        private readonly IDictionary<string, TextureManager> TextureNameToManager;
         private BoxelTypes<ICubeBoxelType> BoxelTypes;
         private GPUProfiler Profiler;
 
@@ -54,8 +58,11 @@ namespace BoxelRenderer
                 MaximumAnisotropy = 16,
                 MipLodBias = 0
             });
-            this.ConstructTextures(Device.D3DDevice);
+            this.ImagingFactory = new ImagingFactory2();
+            this.TextureManagers = new Dictionary<Size2, TextureManager>();
+            this.TextureNameToManager = new Dictionary<string, TextureManager>();
             this.Profiler = Device.Profiler;
+            this.ConstructTextures(Device.D3DDevice);
         }
 
         [Timer]
@@ -91,6 +98,13 @@ namespace BoxelRenderer
             this.Profiler.RecordTimeStamp(GPUProfiler.TimeStamp.DrawTerrain);
         }
 
+        public float GetTextureIndexByType(Axis Side, int BoxelType)
+        {
+            var Type = this.BoxelTypes.GetTypeFromInt(BoxelType);
+            var Manager = this.TextureNameToManager[Type.TextureOnSide(Side)];
+            return Manager.GetTextureIndexInArray(Manager[Type.TextureOnSide(Side)]);
+        }
+
         /// <summary>
         /// Allows child classes to do their own rendering work before the Draw call.
         /// The child does not have to worry about (and should not mess with):
@@ -108,19 +122,25 @@ namespace BoxelRenderer
 
         protected abstract void SetupInputElements(out InputElement[] Elements, out int VertexSizeInBytes);
 
-        public float GetTextureIndexByType(Axis Side, int BoxelType)
-        {
-            return this.TextureManager.GetTextureIndexInArray(this.TextureManager[this.BoxelTypes.GetTypeFromInt(BoxelType).TextureOnSide(Side)]);
-        }
-
         private void ConstructTextures(Device1 Device)
         {
-            this.TextureManager = new TextureManager(Device);
             foreach (var TextureName in this.BoxelTypes.GetTextureNames())
             {
-                this.TextureManager.Load(TextureName);
+                if (this.TextureNameToManager.ContainsKey(TextureName))
+                    continue;
+                using(var Source = TextureManager.LoadBitmap(this.ImagingFactory, TextureName))
+                {
+                    TextureManager Manager;
+                    this.TextureManagers.TryGetValue(Source.Size, out Manager);
+                    if (Manager == null)
+                        this.TextureManagers[Source.Size] = Manager = new TextureManager(Device, this.ImagingFactory, Source.Size);
+                    Manager.Add(TextureName, Source);
+                    this.TextureNameToManager[TextureName] = Manager;
+                }
             }
-            this.Texture = this.TextureManager.GenerateTextureArrayView(out TextureCount);
+            if (this.TextureManagers.Count > 1)
+                throw new NotImplementedException("More than 1 TextureManager not allowed.");
+            this.Texture = this.TextureManagers.ElementAt(0).Value.GenerateTextureArrayView(out TextureCount);
         }
 
         private void CompileShaders(Device1 Device, string ShaderFileName, string VertexEntryName, string GeometryEntryName,
@@ -184,7 +204,10 @@ namespace BoxelRenderer
                 this.InstanceBuffer.Dispose();
             if (Disposing)
             {
-                this.TextureManager.Dispose();
+                foreach(var Manager in this.TextureManagers.Values)
+                {
+                    Manager.Dispose();
+                }
                 GC.SuppressFinalize(this);
             }
         }

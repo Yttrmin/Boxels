@@ -1,6 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2012
+# Visual Studio 2013
+VisualStudioVersion = 12.0.20617.1 PREVIEW
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProjectBoxelGame", "ProjectBoxelGame\ProjectBoxelGame.csproj", "{B6668181-B6FF-495D-AC0D-C5F6FEA41539}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BoxelLib", "BoxelLib\BoxelLib.csproj", "{92A2D890-D956-49F2-B23F-4F87EB010B61}"
@@ -16,6 +18,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BoxelCommon", "BoxelCommon\BoxelCommon.csproj", "{16E84D66-DB75-47EA-BD42-B49BEAC90E8F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BoxelGame", "BoxelGame\BoxelGame.csproj", "{24F95ACE-4BE8-4142-893C-17DA780412AA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BoxelRunner", "BoxelRunner\BoxelRunner.csproj", "{64C29A84-EAAC-4DA3-8937-C2A3A1989011}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -107,6 +111,16 @@ Global
 		{24F95ACE-4BE8-4142-893C-17DA780412AA}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{24F95ACE-4BE8-4142-893C-17DA780412AA}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{24F95ACE-4BE8-4142-893C-17DA780412AA}.Release|Win32.ActiveCfg = Release|Any CPU
+		{64C29A84-EAAC-4DA3-8937-C2A3A1989011}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{64C29A84-EAAC-4DA3-8937-C2A3A1989011}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{64C29A84-EAAC-4DA3-8937-C2A3A1989011}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{64C29A84-EAAC-4DA3-8937-C2A3A1989011}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{64C29A84-EAAC-4DA3-8937-C2A3A1989011}.Debug|Win32.ActiveCfg = Debug|Any CPU
+		{64C29A84-EAAC-4DA3-8937-C2A3A1989011}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{64C29A84-EAAC-4DA3-8937-C2A3A1989011}.Release|Any CPU.Build.0 = Release|Any CPU
+		{64C29A84-EAAC-4DA3-8937-C2A3A1989011}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{64C29A84-EAAC-4DA3-8937-C2A3A1989011}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{64C29A84-EAAC-4DA3-8937-C2A3A1989011}.Release|Win32.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

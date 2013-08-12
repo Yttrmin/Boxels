@@ -22,6 +22,7 @@ namespace BoxelGame
         private TextLayout ConsoleHistoryLayout;
         private float HorizontalSizePerCharacter;
         private readonly IList<string> HistoryLines;
+        private readonly IList<string> InputHistory;
         private int HistoryIndex;
         private int _ConsoleLineHeight;
         [ConsoleCommand]
