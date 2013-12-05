@@ -43,5 +43,17 @@ namespace BoxelCommon
         {
             return ZOrderCurveHelper.XWeave[this.X] | ZOrderCurveHelper.YWeave[this.Y] | ZOrderCurveHelper.ZWeave[this.Z];
         }
+
+        public override bool Equals(object obj)
+        {
+            return this.Equals((Byte3)obj);
+        }
+
+        public bool Equals(Byte3 Other)
+        {
+            // FYI tests showed this is faster than a hash code comparison.
+            // Unless the hash codes are cached. Which is never.
+            return this.X == Other.X && this.Y == Other.Y && this.Z == Other.Z;
+        }
     }
 }

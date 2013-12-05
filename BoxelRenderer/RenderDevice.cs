@@ -14,6 +14,7 @@ namespace BoxelRenderer
 {
     public sealed partial class RenderDevice : IDisposable
     {
+        private const bool PrintFeatures = true;
         private Adapter2 Adapter;
         private Factory2 Factory;
         private DeviceDebug DebugDevice; 
@@ -21,7 +22,7 @@ namespace BoxelRenderer
         public RenderDevice2D Device2D { get; private set; }
         public GPUProfiler Profiler { get; private set; }
         private DeviceContext1 ImmediateContext;
-        private Device2 DXGIDevice;
+        private SharpDX.DXGI.Device2 DXGIDevice;
         private SwapChain1 SwapChain;
         private RenderTargetView BackBuffer;
         private Texture2D ScreenshotTexture;
@@ -201,9 +202,10 @@ namespace BoxelRenderer
             Trace.WriteLine(String.Format("Success. Feature Level: {0}", this.D3DDevice.FeatureLevel));
             Console.ForegroundColor = OldColor;
             Trace.WriteLine("Creating DXGI1.2 Device...");
-            this.DXGIDevice = this.D3DDevice.QueryInterface<Device2>();
+            this.DXGIDevice = this.D3DDevice.QueryInterface<SharpDX.DXGI.Device2>();
             Trace.WriteLine("Success... Creating DXGI1.1 SwapChain...");
-            this.SwapChain = this.Factory.CreateSwapChainForHwnd(this.DXGIDevice, Window.Handle, ref SwapDesc, null, null);
+            //this.SwapChain = this.Factory.CreateSwapChainForHwnd(this.DXGIDevice, Window.Handle, ref SwapDesc, null, null);
+            this.SwapChain = new SwapChain1(this.Factory, this.D3DDevice, Window.Handle, ref SwapDesc);
             this.SwapChain.DebugName = "SwapChain";
             this.Factory.MakeWindowAssociation(Window.Handle, WindowAssociationFlags.IgnoreAll);
             var BackBufferTexture = this.SwapChain.GetBackBuffer<Texture2D>(0);
@@ -215,6 +217,10 @@ namespace BoxelRenderer
             this.InitializeViewport();
             this.InitializeDepthBuffer(BackBufferTexture.Description.Width, BackBufferTexture.Description.Height);
             BackBufferTexture.Dispose();
+            if(PrintFeatures)
+            {
+                Trace.WriteLine(this.GetFeaturesString());
+            }
             Trace.WriteLine("-------------------End D3D11.1------------------------------");
         }
 
@@ -316,6 +322,18 @@ namespace BoxelRenderer
             Builder.AppendFormat("Driver supports *.Discard*() functions: {0}", Features.DiscardAPIsSeenByDriver);
             Builder.AppendLine();
             Builder.AppendFormat("Driver supports CopyFlags: {0}", Features.FlagsForUpdateAndCopySeenByDriver);
+            Builder.AppendLine();
+            Builder.AppendLine("-------------------------------------------------------------------------");
+            Builder.AppendLine("D3D11.2 Features:");
+            Builder.AppendLine();
+            var D3D112 = this.D3DDevice.CheckD3D112Feature();
+            Builder.AppendFormat("Driver tiled resources support: {0}", D3D112.TiledResourcesTier.ToString());
+            Builder.AppendLine();
+            Builder.AppendFormat("Driver map on default buffers support: {0}", D3D112.MapOnDefaultBuffers);
+            Builder.AppendLine();
+            Builder.AppendFormat("Driver min/max filtering support: {0}", D3D112.MinMaxFiltering);
+            Builder.AppendLine();
+            Builder.AppendFormat("Driver clearview also supports depth only formats support: {0}", D3D112.ClearViewAlsoSupportsDepthOnlyFormats.ToString());
             Builder.AppendLine();
             Builder.AppendLine("=========End Features.==========");
             return Builder.ToString();

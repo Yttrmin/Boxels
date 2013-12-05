@@ -41,6 +41,7 @@ namespace BoxelRenderer
             InstanceCount = 0;
             var Enumerable = this.GetBoxelArray(Boxels);
             var Random = new Random();
+            var TotalBoxels = 0;
             using (var Buffer = new DataBuffer((Enumerable.Length * SmartCubeImmediate.MaxDrawnVertexCount) * VertexSizeInBytes))
             {
                 IntPtr CurrentPosition = Buffer.DataPointer;
@@ -52,6 +53,7 @@ namespace BoxelRenderer
                         Result.Boxel.Position.Z * BoxelSize),
                         BoxelSize, Result.VisibleSides, this, Result.Boxel.Type);
                     FinalSize += SmartCubeImmediate.Write(ref CurrentPosition);
+                    TotalBoxels++;
                 }
                 VertexCount = FinalSize / Vertex.SizeInBytes;
                 System.Diagnostics.Trace.WriteLine(String.Format("Final vertex count: {0}", FinalSize / Vertex.SizeInBytes));
@@ -68,6 +70,8 @@ namespace BoxelRenderer
                 VertexBuffer.DebugName = "BoxelsVertexBuffer";
                 Binding = new VertexBufferBinding(VertexBuffer, VertexSizeInBytes, 0);
             }
+            System.Diagnostics.Trace.WriteLine(String.Format("CubeNoGSRenderer buffers created. {0} boxels buffered totaling {1} vertices.",
+                TotalBoxels, VertexCount));
         }
 
         protected override void SetupInputElements(out InputElement[] Elements, out int VertexSizeInBytes)

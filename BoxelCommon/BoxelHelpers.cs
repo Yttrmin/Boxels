@@ -84,6 +84,8 @@ namespace BoxelCommon
                     Sides |= Side.PosZ;
                 if (Container.AtOrDefault(Boxel.Position - Int3.UnitZ) == null)
                     Sides |= Side.NegZ;
+                if (Sides == BoxelHelpers.Side.None)
+                    continue;
                 yield return new VisibleBoxel(Boxel, Sides);
             }
         }

@@ -35,9 +35,9 @@
     <Reference Include="PostSharp">
       <HintPath>..\packages\PostSharp.3.0.30\lib\net20\PostSharp.dll</HintPath>
     </Reference>
-    <Reference Include="SharpDX, Version=2.5.0.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="SharpDX, Version=2.5.1.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\SharpDX-nightly\Bin\DirectX11_1-net40\SharpDX.dll</HintPath>
+      <HintPath>..\..\..\..\SharpDX-nightly\Bin\DirectX11_2-net40\SharpDX.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX.D3DCompiler, Version=2.5.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -45,15 +45,15 @@
     </Reference>
     <Reference Include="SharpDX.Direct2D1, Version=2.5.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\SharpDX-nightly\Bin\DirectX11_1-net40\SharpDX.Direct2D1.dll</HintPath>
+      <HintPath>..\..\..\..\SharpDX-nightly\Bin\DirectX11_2-net40\SharpDX.Direct2D1.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX.Direct3D11, Version=2.5.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\SharpDX-nightly\Bin\DirectX11_1-net40\SharpDX.Direct3D11.dll</HintPath>
+      <HintPath>..\..\..\..\SharpDX-nightly\Bin\DirectX11_2-net40\SharpDX.Direct3D11.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX.DXGI, Version=2.5.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\SharpDX-nightly\Bin\DirectX11_1-net40\SharpDX.DXGI.dll</HintPath>
+      <HintPath>..\..\..\..\SharpDX-nightly\Bin\DirectX11_2-net40\SharpDX.DXGI.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -78,10 +78,12 @@
     <Compile Include="RenderDevice.cs" />
     <Compile Include="RenderDevice2D.cs" />
     <Compile Include="RendererHelpers.cs" />
+    <Compile Include="RenderManager.cs" />
     <Compile Include="RequiresPostSharp.cs" />
     <Compile Include="SmartCubeImmediate.cs" />
     <Compile Include="TextStack.cs" />
     <Compile Include="TextureManager.cs" />
+    <Compile Include="TiledPlaneRenderer.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\BoxelCommon\BoxelCommon.csproj">
@@ -106,13 +108,10 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup>
-    <WCFMetadata Include="Service References\" />
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UpdateFileVersion="True" BuildVersion_BuildVersioningStyle="None.None.None.Increment" />
+      <UserProperties BuildVersion_BuildVersioningStyle="None.None.None.Increment" BuildVersion_UpdateFileVersion="True" />
     </VisualStudio>
   </ProjectExtensions>
   <Import Project="..\packages\PostSharp.3.0.30\tools\PostSharp.targets" Condition="Exists('..\packages\PostSharp.3.0.30\tools\PostSharp.targets')" />

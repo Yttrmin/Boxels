@@ -43,8 +43,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\SharpDX-nightly\Bin\DirectX11_1-net40\SharpDX.Direct2D1.dll</HintPath>
     </Reference>
-    <Reference Include="SharpDX.RawInput">
-      <HintPath>..\..\..\..\SharpDX-nightly\Bin\DirectX11_1-net40\SharpDX.RawInput.dll</HintPath>
+    <Reference Include="SharpDX.RawInput, Version=2.5.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\SharpDX-nightly\Bin\DirectX11_2-net40\SharpDX.RawInput.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

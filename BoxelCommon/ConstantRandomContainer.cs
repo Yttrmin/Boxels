@@ -9,6 +9,7 @@ using ProtoBuf;
 
 namespace BoxelCommon
 {
+    [Obsolete("Use Grid3D.")]
     [ProtoContract]
     public sealed class ConstantRandomContainer : IBoxelContainer
     {

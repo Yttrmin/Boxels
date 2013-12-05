@@ -110,7 +110,7 @@ namespace BoxelGame
         private void UpdateString()
         {
             this.Builder.Clear();
-            Builder.Append(String.Format("Frame Time: {0}ms", this.DeltaTimeCount / this.FrameCount * 1000));
+            //Builder.Append(String.Format("Frame Time: {0}ms", this.DeltaTimeCount / this.FrameCount * 1000));
             foreach(var Key in this.DrawOrder)
             {
                 var Event = this.GetEvent(Key);
@@ -120,7 +120,8 @@ namespace BoxelGame
             }
             this.DeltaTimeCount = 0;
             this.FrameCount = 0;
-            Trace.WriteLine(this.ToString());
+            if(Builder.Length > 0)
+                Trace.WriteLine(this.ToString());
         }
 
         private Event GetEvent(string ID)

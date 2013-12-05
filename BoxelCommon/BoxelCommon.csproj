@@ -40,7 +40,7 @@
     </Reference>
     <Reference Include="SharpDX, Version=2.5.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\SharpDX-nightly\Bin\DirectX11_1-net40\SharpDX.dll</HintPath>
+      <HintPath>..\..\..\..\SharpDX-nightly\Bin\DirectX11_2-net40\SharpDX.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -58,6 +58,7 @@
     <Compile Include="Byte3.cs" />
     <Compile Include="ConsoleCommand.cs" />
     <Compile Include="ConstantRandomContainer.cs" />
+    <Compile Include="Grid3D.cs" />
     <Compile Include="IBoxel.cs" />
     <Compile Include="IBoxelContainer.cs" />
     <Compile Include="IProfilers.cs" />
