@@ -138,14 +138,6 @@ namespace BoxelCommon
         }
     }
 
-    internal static class Int3Extensions
-    {
-        public static Int3 Remainder(this Int3 This, int Other)
-        {
-            return new Int3(This.X % Other, This.Y % Other, This.Z % Other);
-        }
-    }
-
     [ProtoContract]
     internal sealed class ConstantChunk : IChunk
     {

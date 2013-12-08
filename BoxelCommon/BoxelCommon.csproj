@@ -61,6 +61,7 @@
     <Compile Include="Grid3D.cs" />
     <Compile Include="IBoxel.cs" />
     <Compile Include="IBoxelContainer.cs" />
+    <Compile Include="Int3Extensions.cs" />
     <Compile Include="IProfilers.cs" />
     <Compile Include="ITickable.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -73,7 +74,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UpdateFileVersion="True" BuildVersion_BuildVersioningStyle="None.None.None.Increment" />
+      <UserProperties BuildVersion_BuildVersioningStyle="None.None.None.Increment" BuildVersion_UpdateFileVersion="True" />
     </VisualStudio>
   </ProjectExtensions>
   <Import Project="..\packages\PostSharp.3.0.30\tools\PostSharp.targets" Condition="Exists('..\packages\PostSharp.3.0.30\tools\PostSharp.targets')" />

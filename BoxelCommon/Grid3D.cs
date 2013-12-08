@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Side = BoxelCommon.BoxelHelpers.Side;
+using Int3 = SharpDX.Int3;
 
 namespace BoxelCommon
 {
-    public sealed class Grid3D<T>
+    public sealed class Grid3D<T> where T: IPositionable
     {
         private readonly IDictionary<int, T> Contents;
         public int Count { get { throw new NotImplementedException(); } }
@@ -15,11 +17,6 @@ namespace BoxelCommon
         public Grid3D()
         {
             this.Contents = new Dictionary<int, T>();
-        }
-
-        public Grid3D(IEnumerable<IBoxel> Boxels)
-        {
-            throw new NotImplementedException();
         }
 
         public void Add(int Position, T Item)
@@ -63,9 +60,40 @@ namespace BoxelCommon
             return this.At(Position.GetHashCode());
         }
 
-        public T[] AllItems()
+        private bool IsOccupied(int Position)
         {
-            return this.Contents.Values.ToArray();
+            return this.Contents.ContainsKey(Position);
+        }
+
+        private T AtOrDefault(int Position)
+        {
+            T Result;
+            if (this.Contents.TryGetValue(Position, out Result))
+                return Result;
+            else
+                return default(T);
+        }
+
+        public T At(T Item, Side Side)
+        {
+            switch(Side)
+            {
+                case Side.PosX:
+                    return this.AtOrDefault((Item.Position + Int3.UnitX).ToInt());
+                default:
+                    return default(T);
+            }
+        }
+
+        public IEnumerable<T> AllItems
+        {
+            get
+            {
+                foreach(var Object in this.Contents.Values)
+                {
+                    yield return Object;
+                }
+            }
         }
     }
 }

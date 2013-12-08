@@ -8,6 +8,11 @@ using ProtoBuf;
 
 namespace BoxelCommon
 {
+    public abstract class BaseBoxel
+    {
+
+    }
+
     [ProtoContract]
     public class BasicBoxel : IBoxel
     {

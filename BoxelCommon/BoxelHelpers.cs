@@ -34,6 +34,22 @@ namespace BoxelCommon
             return Result;
         }
 
+        public static IEnumerable<Side> AllSides(Side Sides)
+        {
+            if ((Sides & Side.NegX) == Side.NegX)
+                yield return Side.NegX;
+            if ((Sides & Side.NegY) == Side.NegY)
+                yield return Side.NegY;
+            if ((Sides & Side.NegZ) == Side.NegZ)
+                yield return Side.NegZ;
+            if ((Sides & Side.PosX) == Side.PosX)
+                yield return Side.PosX;
+            if ((Sides & Side.PosY) == Side.PosY)
+                yield return Side.PosY;
+            if ((Sides & Side.PosZ) == Side.PosZ)
+                yield return Side.PosZ;
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -53,7 +69,7 @@ namespace BoxelCommon
         }
 
         [StructLayout(LayoutKind.Auto)]
-        public struct VisibleBoxel
+        public struct VisibleBoxel : IBoxel
         {
             public readonly IBoxel Boxel;
             public readonly BoxelHelpers.Side VisibleSides;
@@ -62,6 +78,33 @@ namespace BoxelCommon
             {
                 this.Boxel = Boxel;
                 this.VisibleSides = VisibleSides;
+            }
+
+            public float Scale
+            {
+                get { return this.Boxel.Scale; }
+            }
+
+            public Int3 Position
+            {
+                get { return this.Boxel.Position; }
+            }
+
+            public int Type
+            {
+                get { return this.Boxel.Type; }
+            }
+
+            public IBoxelContainer Container
+            {
+                get
+                {
+                    return this.Boxel.Container;
+                }
+                set
+                {
+                    this.Boxel.Container = value;
+                }
             }
         }
 

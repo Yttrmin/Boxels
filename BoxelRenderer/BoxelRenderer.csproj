@@ -104,6 +104,7 @@
     <Content Include="PRShaders.hlsl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="TiledPlaneShaders.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

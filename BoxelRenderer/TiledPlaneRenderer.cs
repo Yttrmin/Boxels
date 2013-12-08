@@ -9,12 +9,15 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Buffer = SharpDX.Direct3D11.Buffer;
+using VisibleBoxel = BoxelCommon.BoxelHelpers.VisibleBoxel;
+using Side = BoxelCommon.BoxelHelpers.Side;
 
 namespace BoxelRenderer
 {
     public sealed class TiledPlaneRenderer : BaseRenderer
     {
         private Buffer BoxelTextureLookup;
+        private const int BoxelSize = 2;
 
         public TiledPlaneRenderer(RenderDevice Device, BoxelTypes<ICubeBoxelType> Types)
             : base("TiledPlaneShaders.hlsl", "VShaderTextured", null, "PShaderTextured", 
@@ -32,10 +35,55 @@ namespace BoxelRenderer
 
         private void CreatePlanarOutline(IEnumerable<IBoxel> Boxels, ref IntPtr BufferPointer)
         {
-            var BoxelPlaneMap = new Dictionary<int, Plane>();
-            foreach(var Boxel in BoxelHelpers.SideOcclusionCull(Boxels))
+            var BoxelPlaneMap = new Dictionary<Tuple<int, Side>, RectangleReference>();
+            var Grid = new Grid3D<VisibleBoxel>();
+            foreach(var VisibleBoxel in BoxelHelpers.SideOcclusionCull(Boxels))
             {
-                
+                Grid.Add(VisibleBoxel.Boxel.Position.GetHashCode(), VisibleBoxel);
+            }
+
+            var Checked = new HashSet<VisibleBoxel>();
+            foreach(var VisibleBoxel in Grid.AllItems)
+            {
+                foreach (var Side in BoxelHelpers.AllSides(VisibleBoxel.VisibleSides))
+                {
+                    // Foreach visible side, check if there's any planes already to the
+                    // left, right, top, and bottom. If so, grow the plane to include it.
+                    // Else, create a new plane.
+                    // Inefficient, but simple.
+                    switch(Side)
+                    {
+                        case Side.PosX:
+                            var OurKey = new Tuple<int, Side>(VisibleBoxel.Position.ToInt(), Side.PosX); 
+                            var LeftKey = new Tuple<int, Side>((VisibleBoxel.Position - Int3.UnitZ).ToInt(), Side.PosX);
+                            var RightKey = new Tuple<int, Side>((VisibleBoxel.Position + Int3.UnitZ).ToInt(), Side.PosX);
+                            RectangleReference Left, Right;
+                            BoxelPlaneMap.TryGetValue(LeftKey, out Left);
+                            BoxelPlaneMap.TryGetValue(RightKey, out Right);
+                            if(Left != null && Right == null)
+                            {
+                                Left.Rectangle.Right += BoxelSize;
+                                BoxelPlaneMap[OurKey] = Left;
+                            }
+                            else if(Right != null && Left == null)
+                            {
+                                Right.Rectangle.Left -= BoxelSize;
+                                BoxelPlaneMap[OurKey] = Right;
+                            }
+                            else if(Right != null && Left != null)
+                            {
+                                throw new NotImplementedException();
+                            }
+                            else if(Right == null && Left == null)
+                            {
+                                BoxelPlaneMap[OurKey] = new RectangleReference(
+                                    new Rectangle(VisibleBoxel.Position.X - BoxelSize/2, 
+                                        VisibleBoxel.Position.Y - BoxelSize/2, BoxelSize, BoxelSize));
+                            }
+                            break;
+                    }
+                }
+                Checked.Add(VisibleBoxel);
             }
         }
 
@@ -55,6 +103,20 @@ namespace BoxelRenderer
             VertexSizeInBytes = Vector3.SizeInBytes * 2;
         }
 
-        
+        private sealed class BoxelRectangle
+        {
+            public VisibleBoxel Boxel { get; private set; }
+            public RectangleReference Rectangle { get; private set; }
+        }
+
+        private sealed class RectangleReference
+        {
+            public Rectangle Rectangle;
+
+            public RectangleReference(Rectangle Rectangle)
+            {
+                this.Rectangle = Rectangle;
+            }
+        }
     }
 }

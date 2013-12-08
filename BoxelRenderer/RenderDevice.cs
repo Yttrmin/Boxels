@@ -36,6 +36,7 @@ namespace BoxelRenderer
         private bool PendingScreenshot;
         private string ScreenshotDirectory { get; set; }
         private string MovieDirectory { get; set; }
+        private bool IsFullscreen { get; set; }
 
         public RenderDevice(RenderForm Window)
         {
@@ -120,6 +121,7 @@ namespace BoxelRenderer
         {
             this.SwapChain.SetFullscreenState(true, null);
             this.Resize(1280, 1024);
+            IsFullscreen = true;
         }
 
         public void Record(string FolderName)
