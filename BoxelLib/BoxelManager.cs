@@ -53,7 +53,7 @@ namespace BoxelLib
         private BoxelManager(BoxelTypes<ICubeBoxelType> Types, RenderDevice RenderDevice)
         {
             this.BoxelTypes = Types;
-            this.Renderer = new CubeNoGSRenderer(RenderDevice, this.BoxelTypes);
+            this.Renderer = new TiledPlaneRenderer(RenderDevice, this.BoxelTypes);
             this.DrawDistance = 32;
             this.RenderDevice = RenderDevice;
             this.PerFrameData = new Buffer(RenderDevice.D3DDevice, Matrix.SizeInBytes, ResourceUsage.Dynamic,

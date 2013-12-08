@@ -34,6 +34,13 @@ namespace BoxelCommon
             this.Z = (byte)XYZ.Z;
         }
 
+        public static bool CanFit(Int3 Other)
+        {
+            return Other.X >= byte.MinValue && Other.X <= byte.MaxValue &&
+                Other.Y >= byte.MinValue && Other.Y <= byte.MaxValue &&
+                Other.Z >= byte.MinValue && Other.Z <= byte.MaxValue;
+        }
+
         public Vector3 ToVector3()
         {
             return new Vector3(X, Y, Z);

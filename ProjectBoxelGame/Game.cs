@@ -41,7 +41,7 @@ namespace ProjectBoxelGame
             this.Window.MaximizeBox = true;
             this.Window.ClientSize = new System.Drawing.Size(Width, Height);
             this.Window.UserResized += (a, b) => { this.Resized = true; };
-            this.Camera = new BasicCamera(new Vector3(0, 25, 0), new Vector3(1, 0, 0), Width, Height);
+            this.Camera = new BasicCamera(new Vector3(-50, 25, 0), new Vector3(1.0f, 0, 0.0f), Width, Height);
             this.RenderDevice = new RenderDevice(this.Window);
             this.CPUProfiler = new CPUProfiler();
             this.ConsoleTUI = new BoxelGame.ConsoleTUI(this.Console, this.RenderDevice.Device2D);

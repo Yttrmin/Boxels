@@ -29,10 +29,19 @@ VSOut VShaderTextured(VSIn vertex)
 
 float4 PShaderTextured(VSOut vertex) : SV_TARGET
 {
+	float4 color = float4(BoxelTextures.Sample(BoxelSamplerState, vertex.UVs));
+	if (color.a < .5)
+		return float4(0, 0, 0, 0);
+	else
+		return float4(color.rgb, 1);
+}
+
+/*float4 PShaderTextured(VSOut vertex) : SV_TARGET
+{
 	float4 color = float4(BoxelTextures.Sample(BoxelSamplerState, 
 		float3(vertex.UVs.xy, TextureLookup.Load(int4(vertex.UVs.xyz, 0)))));
 	if(color.a < .5)
 		return float4(0,0,0,0);
 	else
 		return float4(color.rgb, 1);
-}
+}*/

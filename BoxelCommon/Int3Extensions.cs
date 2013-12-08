@@ -18,5 +18,28 @@ namespace BoxelCommon
         {
             return ZOrderCurveHelper.XWeave[Self.X] | ZOrderCurveHelper.YWeave[Self.Y] | ZOrderCurveHelper.ZWeave[Self.Z];
         }
+
+        public static int? ToIntOrNull(this Int3 Self)
+        {
+            int Result;
+            if (Self.TryToInt(out Result))
+                return Result;
+            else
+                return null;
+        }
+
+        public static bool TryToInt(this Int3 Self, out int Result)
+        {
+            if(Byte3.CanFit(Self))
+            {
+                Result = Self.ToInt();
+                return true;
+            }
+            else
+            {
+                Result = default(int);
+                return false;
+            }
+        }
     }
 }
