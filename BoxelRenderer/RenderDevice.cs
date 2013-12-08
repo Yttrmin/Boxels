@@ -51,7 +51,7 @@ namespace BoxelRenderer
             using (var State = new RasterizerState1(this.D3DDevice, new RasterizerStateDescription1()
                 {
                     CullMode = CullMode.Back,
-                    FillMode = FillMode.Solid,
+                    FillMode = FillMode.Wireframe,
                     IsFrontCounterClockwise = false
                 }))
             {

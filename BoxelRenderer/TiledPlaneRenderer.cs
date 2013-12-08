@@ -12,6 +12,7 @@ using Buffer = SharpDX.Direct3D11.Buffer;
 using VisibleBoxel = BoxelCommon.BoxelHelpers.VisibleBoxel;
 using Side = BoxelCommon.BoxelHelpers.Side;
 using Vertex = BoxelRenderer.Vertex;
+using System.Diagnostics;
 
 namespace BoxelRenderer
 {
@@ -19,16 +20,16 @@ namespace BoxelRenderer
     {
         private Buffer BoxelTextureLookup;
         private const int BoxelSize = 2;
-        private readonly Dictionary<Side, FlankingSides<Int3>> SideFlanks;
+        private readonly Dictionary<Side, FlankingSides<Side>> SideFlanks;
 
         public TiledPlaneRenderer(RenderDevice Device, BoxelTypes<ICubeBoxelType> Types)
             : base("TiledPlaneShaders.hlsl", "VShaderTextured", null, "PShaderTextured", 
                 PrimitiveTopology.TriangleList, Device, Types)
         {
-            this.SideFlanks = new Dictionary<Side, FlankingSides<Int3>>();
-            this.SideFlanks[Side.PosX] = new FlankingSides<Int3>(-Int3.UnitZ, Int3.UnitZ, Int3.UnitY, -Int3.UnitY);
-            this.SideFlanks[Side.NegX] = new FlankingSides<Int3>(Int3.UnitZ, -Int3.UnitZ, Int3.UnitY, -Int3.UnitY);
-            this.SideFlanks[Side.PosY] = new FlankingSides<Int3>(-Int3.UnitZ, Int3.UnitZ, -Int3.UnitX, Int3.UnitX);
+            this.SideFlanks = new Dictionary<Side, FlankingSides<Side>>();
+            this.SideFlanks[Side.PosX] = new FlankingSides<Side>(Side.NegZ, Side.PosZ, Side.PosY, Side.NegY);
+            this.SideFlanks[Side.NegX] = new FlankingSides<Side>(Side.PosZ, Side.NegZ, Side.PosY, Side.NegY);
+            this.SideFlanks[Side.PosY] = new FlankingSides<Side>(Side.NegZ, Side.PosZ, Side.NegX, Side.PosX);
         }
 
         protected override void GenerateBuffers(IEnumerable<IBoxel> Boxels, SharpDX.Direct3D11.Device1 Device, 
@@ -43,7 +44,7 @@ namespace BoxelRenderer
             VertexCount = 0;
 
             var BoxelArray = Boxels.ToArray();
-            using(var Buffer = new DataBuffer(BoxelArray.Length * VertexSizeInBytes))
+            using(var Buffer = new DataBuffer(BoxelArray.Length * VertexSizeInBytes * 24))
             {
                 IntPtr CurrentPosition = Buffer.DataPointer;
                 int FinalSize = 0;
@@ -70,90 +71,122 @@ namespace BoxelRenderer
                 VertexCount));
         }
 
+        [Timer]
         private Rectangle3D[] CreateRectangleOutline(IEnumerable<IBoxel> Boxels)
         {
-            var BoxelPlaneMap = new Dictionary<Tuple<int, Side>, Rectangle3D>();
+            var Checked = new Dictionary<Side, HashSet<IBoxel>>();
+            Checked[BoxelHelpers.Side.NegX] = new HashSet<IBoxel>();
+            Checked[BoxelHelpers.Side.PosX] = new HashSet<IBoxel>();
+            Checked[BoxelHelpers.Side.PosY] = new HashSet<IBoxel>();
+            Checked[BoxelHelpers.Side.NegY] = new HashSet<IBoxel>();
+            Checked[BoxelHelpers.Side.PosZ] = new HashSet<IBoxel>();
+            Checked[BoxelHelpers.Side.NegZ] = new HashSet<IBoxel>();
+            var RectList = new List<Rectangle3D>();
+            var Grid = new Grid3D<VisibleBoxel>();
 
-            foreach (var VisibleBoxel in BoxelHelpers.SideOcclusionCull(Boxels))
+            foreach(var VisibleBoxel in BoxelHelpers.SideOcclusionCull(Boxels))
             {
-                foreach (var Side in BoxelHelpers.AllSides(VisibleBoxel.VisibleSides))
+                Grid.Add(VisibleBoxel.Position, VisibleBoxel);
+            }
+
+            foreach(var VisibleBoxel in Grid.AllItems)
+            {
+                /*if (Checked.Contains(VisibleBoxel.Boxel))
+                    continue;
+                Checked.Add(VisibleBoxel.Boxel);*/
+
+                foreach(var Side in BoxelHelpers.AllSides(VisibleBoxel.VisibleSides))
                 {
-                    // Foreach visible side, check if there's any planes already to the
-                    // left, right, top, and bottom. If so, grow the plane to include it.
-                    // Else, create a new plane.
-                    // Inefficient, but simple.
-                    if (Side == Side.NegX || Side == Side.PosX || Side == Side.PosY)
-                        RectanglizeBoxel(VisibleBoxel.Boxel, Side, BoxelPlaneMap);
+                    if (Side != Side.NegX && Side != Side.PosX && Side != Side.PosY)
+                        continue;
+
+                    if (Checked[Side].Contains(VisibleBoxel.Boxel))
+                        continue;
+                    Checked[Side].Add(VisibleBoxel.Boxel);
+
+                    var Rect = this.CreateRectangle(VisibleBoxel.Boxel, Side);
+                    RectList.Add(Rect);
+
+                    if (Side == BoxelHelpers.Side.PosX)Trace.WriteLine(String.Format("Go {0}", VisibleBoxel.Position));
+
+                    IBoxel RightMost = VisibleBoxel.Boxel;
+                    foreach(var Boxel in Grid.AllItemsFromIndexAlongAxis(VisibleBoxel.Position, this.SideFlanks[Side].Right))
+                    {
+                        if (Side == BoxelHelpers.Side.PosX)Trace.WriteLine(String.Format("Right {0}", Boxel.Position));
+                        RightMost = Boxel.Boxel;
+                        var Added = Checked[Side].Add(Boxel.Boxel);
+                        Debug.Assert(Added);
+                        Rect.ExtendRight(BoxelSize);
+                    }
+
+                    IBoxel LeftMost = VisibleBoxel.Boxel;
+                    foreach (var Boxel in Grid.AllItemsFromIndexAlongAxis(VisibleBoxel.Position, this.SideFlanks[Side].Left))
+                    {
+                        if (Side == BoxelHelpers.Side.PosX)Trace.WriteLine(String.Format("Left {0}", Boxel.Position));
+                        LeftMost = Boxel.Boxel;
+                        var Added = Checked[Side].Add(Boxel.Boxel);
+                        Debug.Assert(Added);
+                        Rect.ExtendLeft(BoxelSize);
+                    }
+
+                    foreach (var Boxel in Grid.AllItemsFromIndexAlongAxis(LeftMost.Position, this.SideFlanks[Side].Above))
+                    {
+                        if (Side == BoxelHelpers.Side.PosX)Trace.WriteLine(String.Format("Left {0}", Boxel.Position));
+                        Rect.ExtendAbove(BoxelSize);
+                        foreach (var BetwixtBoxel in Grid.AllItemsBetween(Boxel.Position, this.SideFlanks[Side].Right,
+                            Rect.Width / 2 - 1))
+                        {
+                            if (Side == BoxelHelpers.Side.PosX)Trace.WriteLine(String.Format("Betwixt {0}", BetwixtBoxel.Position));
+                            var Added = Checked[Side].Add(BetwixtBoxel.Boxel);
+                            Debug.Assert(Added);
+                        }
+                    }
+                    foreach (var Boxel in Grid.AllItemsFromIndexAlongAxis(LeftMost.Position, this.SideFlanks[Side].Below))
+                    {
+                        if(Side == BoxelHelpers.Side.PosX)Trace.WriteLine(String.Format("Down {0}", Boxel.Position));
+                        Rect.ExtendBelow(BoxelSize);
+                        foreach (var BetwixtBoxel in Grid.AllItemsBetween(Boxel.Position, this.SideFlanks[Side].Right,
+                            Rect.Width / 2 - 1))
+                        {
+                            if (Side == BoxelHelpers.Side.PosX)Trace.WriteLine(String.Format("Betwixt {0}", BetwixtBoxel.Position));
+                            var Added = Checked[Side].Add(BetwixtBoxel.Boxel);
+                            Debug.Assert(Added);
+                        }
+                    }
+                    Trace.WriteLine(String.Format("Done with Pos {1} Side {0}.", Side, VisibleBoxel.Position));
                 }
             }
-
-            var FinalSet = new HashSet<Rectangle3D>();
-            foreach(var Rect in BoxelPlaneMap.Values)
-            {
-                FinalSet.Add(Rect);
-            }
-            return FinalSet.ToArray();
+            Trace.WriteLine(String.Format("Outlined world with {0} rectangles.", RectList.Count));
+            return RectList.ToArray();
         }
 
-        private void RectanglizeBoxel(IBoxel Boxel, Side Side, 
-            Dictionary<Tuple<int, Side>, Rectangle3D> BoxelPlaneMap)
+        private Rectangle3D CreateRectangle(IBoxel Boxel, Side Side)
         {
-            var RectangleFlanks = LookupFlankBoxels(Boxel, Side, BoxelPlaneMap);
-            
-            var OurKey = new Tuple<int, Side>(Boxel.Position.ToInt(), Side);
-
-
-            if (RectangleFlanks.Left != null && RectangleFlanks.Right == null)
+            Rectangle3D Result = null;
+            switch(Side)
             {
-                RectangleFlanks.Left.ExtendRight(BoxelSize);
-                BoxelPlaneMap[OurKey] = RectangleFlanks.Left;
-            }
-            else if (RectangleFlanks.Right != null && RectangleFlanks.Left == null)
-            {
-                RectangleFlanks.Right.ExtendLeft(BoxelSize);
-                BoxelPlaneMap[OurKey] = RectangleFlanks.Right;
-            }
-            else if (RectangleFlanks.Right != null && RectangleFlanks.Left != null)
-            {
-                //@TODO
-            }
-            else if (RectangleFlanks.Right == null && RectangleFlanks.Left == null)
-            {
-                if (Side == Side.PosX)
-                {
-                    // -X forward, +Z right, -Y below
-                    BoxelPlaneMap[OurKey] = new Rectangle3D((Boxel.Position.X + BoxelSize / 2) * BoxelSize,
-                        (Boxel.Position.Y + BoxelSize / 2) * BoxelSize, (Boxel.Position.Z - BoxelSize / 2) * BoxelSize,
-                        BoxelSize, BoxelSize, Side);
-                }
-                else if(Side == Side.NegX)
-                {
+                case Side.NegX:
                     // +X forward, -Z right, -Y below
-                    BoxelPlaneMap[OurKey] = new Rectangle3D((Boxel.Position.X - BoxelSize / 2) * BoxelSize,
+                    Result = new Rectangle3D((Boxel.Position.X - BoxelSize / 2) * BoxelSize,
                         (Boxel.Position.Y + BoxelSize / 2) * BoxelSize, (Boxel.Position.Z + BoxelSize / 2) * BoxelSize,
                         BoxelSize, BoxelSize, Side);
-                }
-                else if(Side == Side.PosY)
-                {
-                    // -Y forward, +Z right, +X below
-                    BoxelPlaneMap[OurKey] = new Rectangle3D((Boxel.Position.X - BoxelSize / 2) * BoxelSize,
+                    break;
+                case Side.PosX:
+                    Result = new Rectangle3D((Boxel.Position.X + BoxelSize / 2) * BoxelSize,
                         (Boxel.Position.Y + BoxelSize / 2) * BoxelSize, (Boxel.Position.Z - BoxelSize / 2) * BoxelSize,
                         BoxelSize, BoxelSize, Side);
-                }
+                    break;
+                case Side.PosY:
+                    // -Y forward, +Z right, +X below
+                    Result = new Rectangle3D((Boxel.Position.X - BoxelSize / 2) * BoxelSize,
+                        (Boxel.Position.Y + BoxelSize / 2) * BoxelSize, (Boxel.Position.Z + BoxelSize / 2) * BoxelSize,
+                        BoxelSize, BoxelSize, Side);
+                    break;
+                default:
+                    throw new NotImplementedException();
+                    break;
             }
-        }
-
-        private FlankingSides<Rectangle3D> LookupFlankBoxels(IBoxel Boxel, Side Side, 
-            Dictionary<Tuple<int, Side>, Rectangle3D> BoxelPlaneMap)
-        {
-            Rectangle3D Left = null, Right = null;
-            var LeftKey = (Boxel.Position + this.SideFlanks[Side].Left).ToIntOrNull();
-            var RightKey = (Boxel.Position + this.SideFlanks[Side].Right).ToIntOrNull();
-            if(LeftKey.HasValue)
-                BoxelPlaneMap.TryGetValue(new Tuple<int, Side>(LeftKey.Value, Side), out Left);
-            if(RightKey.HasValue)
-                BoxelPlaneMap.TryGetValue(new Tuple<int, Side>(RightKey.Value, Side), out Right);
-            return new FlankingSides<Rectangle3D>(Left, Right, null, null);
+            return Result;
         }
 
         protected override void PreRender(DeviceContext1 Context)
@@ -163,6 +196,10 @@ namespace BoxelRenderer
 
         protected override void SetupInputElements(out InputElement[] Elements, out int VertexSizeInBytes)
         {
+            //@TODO - Need a normal for each vertex. The Texture3D can hold a vector but I can't think of how that
+            // could possibly tell us what texture for what side to sample. Instead just have it hold an int for
+            // rock/grass/etc texture and calculate the side to pick from that array based on the surface normal.
+            // Or possibly just include a simple int to save on math in the shader?
             Elements = new[]
                 {
                     new InputElement("POSITION", 0, Format.R32G32B32_Float, 0, 0, InputClassification.PerVertexData, 0),
@@ -201,15 +238,37 @@ namespace BoxelRenderer
 
             public void ExtendLeft(int Amount)
             {
-                if(Side == Side.PosX)
+                if (Side == Side.PosX || Side == Side.PosY)
                 {
                     Z -= Amount;
                 }
-                else if(Side == Side.NegX)
+                else if (Side == Side.NegX)
                 {
                     Z += Amount;
                 }
+                else
+                    throw new NotImplementedException();
                 Width += Amount;
+            }
+
+            public void ExtendAbove(int Amount)
+            {
+                if (Side == Side.NegX || Side == Side.PosX)
+                {
+                    Y += Amount;
+                }
+                else if(Side == Side.PosY)
+                {
+                    X -= Amount;
+                }
+                else
+                    throw new NotImplementedException();
+                Height += Amount;
+            }
+
+            public void ExtendBelow(int Amount)
+            {
+                Height += Amount;
             }
 
             public Vertex[] ToVertices()

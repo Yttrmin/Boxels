@@ -41,5 +41,10 @@ namespace BoxelCommon
             this.Scale = Scale;
             this.Type = Type;
         }
+
+        public override string ToString()
+        {
+            return this.Position.ToString();
+        }
     }
 }
