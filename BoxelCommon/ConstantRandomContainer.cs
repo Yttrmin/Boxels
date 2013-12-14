@@ -59,6 +59,7 @@ namespace BoxelCommon
             this.FullPosition(Position, out ChunkPos, out InternPos);
             var Chunk = this.LazyGetChunk(ChunkPos.GetHashCode(), false);
             Chunk.Add(Boxel, InternPos);
+            Boxel.Container = this;
         }
 
         [Timer]

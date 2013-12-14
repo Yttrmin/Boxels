@@ -16,6 +16,28 @@ namespace BoxelRenderer
         Rectangle3D[] CreateRectangleOutline(IEnumerable<IBoxel> Boxels);
     }
 
+    internal class PlaneMesherLeftRight : PlaneMesher
+    {
+        public PlaneMesherLeftRight(int BoxelSize)
+            : base(BoxelSize)
+        {
+
+        }
+
+        protected override Rectangle3D ProcessBoxelSide(VisibleBoxel VBoxel, Side Side, Grid3D<VisibleBoxel> Grid,
+            ISet<IBoxel> Checked)
+        {
+            var Pos = VBoxel.Position;
+            var Rect = new Rectangle3D((Vector3)Pos * this.BoxelSize, this.BoxelSize, Side);
+
+            var Flanks = BoxelHelpers.GetSideFlanks(Side);
+            this.IncludeAllBoxelsInDirection(Pos, Flanks.Right, Side, Rect, Grid, Checked);
+            this.IncludeAllBoxelsInDirection(Pos, Flanks.Left, Side, Rect, Grid, Checked);
+
+            return Rect;
+        }
+    }
+
     internal class PlaneMesherLowPoly : PlaneMesher
     {
         public PlaneMesherLowPoly(int BoxelSize)
@@ -23,11 +45,17 @@ namespace BoxelRenderer
         {
 
         }
+
+        protected override Rectangle3D ProcessBoxelSide(VisibleBoxel VBoxel, Side Side, Grid3D<VisibleBoxel> Grid,
+            ISet<IBoxel> Checked)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     internal abstract class PlaneMesher : IBoxelMesher
     {
-        private readonly int BoxelSize;
+        protected readonly int BoxelSize;
 
         public PlaneMesher(int BoxelSize)
         {
@@ -56,65 +84,33 @@ namespace BoxelRenderer
             {
                 foreach (var Side in BoxelHelpers.AllSides(VisibleBoxel.VisibleSides))
                 {
-                    if (Side != Side.NegX && Side != Side.PosX && Side != Side.PosY)
-                        continue;
-
                     if (Checked[Side].Contains(VisibleBoxel.Boxel))
                         continue;
                     Checked[Side].Add(VisibleBoxel.Boxel);
 
-                    var Rect = this.CreateRectangle(VisibleBoxel.Boxel, Side);
-                    RectList.Add(Rect);
-
-                    var Flanks = BoxelHelpers.GetSideFlanks(Side);
-                    this.IncludeAllBoxelsInDirection(VisibleBoxel.Position, Flanks.Right, Rect, Grid, Checked[Side]);
-                    this.IncludeAllBoxelsInDirection(VisibleBoxel.Position, Flanks.Left, Rect, Grid, Checked[Side]);
+                    RectList.Add(this.ProcessBoxelSide(VisibleBoxel, Side, Grid, Checked[Side]));
                    
-                    Trace.WriteLine(String.Format("Done with Pos {1} Side {0}.", Side, VisibleBoxel.Position));
+                    //Trace.WriteLine(String.Format("Done with Pos {1} Side {0}.", Side, VisibleBoxel.Position));
                 }
             }
             Trace.WriteLine(String.Format("Outlined world with {0} rectangles.", RectList.Count));
             return RectList.ToArray();
         }
 
-        private void IncludeAllBoxelsInDirection(Int3 StartingPoint, Side Direction, Rectangle3D Rectangle, 
+        protected abstract Rectangle3D ProcessBoxelSide(VisibleBoxel VBoxel, Side Side, Grid3D<VisibleBoxel> Grid,
+            ISet<IBoxel> Checked);
+
+        protected void IncludeAllBoxelsInDirection(Int3 StartingPoint, Side Direction, Side Facing, Rectangle3D Rectangle, 
             Grid3D<VisibleBoxel> Grid, ISet<IBoxel> Checked)
         {
             foreach(var VBoxel in Grid.AllItemsFromIndexAlongAxis(StartingPoint, Direction))
             {
+                if ((VBoxel.VisibleSides & Facing) != Facing)
+                    break;
                 var Added = Checked.Add(VBoxel.Boxel);
                 Debug.Assert(Added);
                 Rectangle.ExtendDirection(BoxelSize, BoxelHelpers.SideToInt3(Direction));
             }
-        }
-
-        private Rectangle3D CreateRectangle(IBoxel Boxel, Side Side)
-        {
-            Rectangle3D Result = null;
-            switch (Side)
-            {
-                case Side.NegX:
-                    // +X forward, -Z right, -Y below
-                    Result = new Rectangle3D((Boxel.Position.X - BoxelSize / 2) * BoxelSize,
-                        (Boxel.Position.Y + BoxelSize / 2) * BoxelSize, (Boxel.Position.Z + BoxelSize / 2) * BoxelSize,
-                        BoxelSize, BoxelSize, Side);
-                    break;
-                case Side.PosX:
-                    Result = new Rectangle3D((Boxel.Position.X + BoxelSize / 2) * BoxelSize,
-                        (Boxel.Position.Y + BoxelSize / 2) * BoxelSize, (Boxel.Position.Z - BoxelSize / 2) * BoxelSize,
-                        BoxelSize, BoxelSize, Side);
-                    break;
-                case Side.PosY:
-                    // -Y forward, +Z right, +X below
-                    Result = new Rectangle3D((Boxel.Position.X - BoxelSize / 2) * BoxelSize,
-                        (Boxel.Position.Y + BoxelSize / 2) * BoxelSize, (Boxel.Position.Z + BoxelSize / 2) * BoxelSize,
-                        BoxelSize, BoxelSize, Side);
-                    break;
-                default:
-                    throw new NotImplementedException();
-                    break;
-            }
-            return Result;
         }
     }
 
@@ -126,75 +122,35 @@ namespace BoxelRenderer
 
     internal sealed class Rectangle3D
     {
-        // Coordinates of upper-left corner.
-        [Obsolete("Use Vector3")]
-        public int X, Y, Z;
-        [Obsolete("Use two points.")]
-        public int Width, Height;
         private Vector3 UpperLeft, LowerRight;
         private readonly BoxelCommon.BoxelHelpers.FlankingSides<Int3> Int3Flanks;
         private readonly Side Side;
         private Int3 LeftToRight, TopToBottom;
 
-        public Rectangle3D(int X, int Y, int Z, int Width, int Height, Side Side)
+        public Rectangle3D(Vector3 CenterPoint, int BoxelSize, Side Side)
         {
-            this.X = X;
-            this.Y = Y;
-            this.Z = Z;
-            this.Width = Width;
-            this.Height = Height;
             this.Side = Side;
-
-            this.UpperLeft = new Vector3(X, Y, Z);
+            this.UpperLeft = CenterPoint;
             this.Int3Flanks = BoxelHelpers.GetInt3Flanks(Side);
-            this.LowerRight = this.UpperLeft + (Vector3)(this.Int3Flanks.Right * Width) 
-                + (Vector3)(this.Int3Flanks.Below * Height);
-            var LeftToRightVec = this.LowerRight - (this.UpperLeft + (Vector3)(this.Int3Flanks.Below * Height));
+            this.LowerRight = this.UpperLeft + (Vector3)(this.Int3Flanks.Right * BoxelSize)
+                + (Vector3)(this.Int3Flanks.Below * BoxelSize);
+            var LeftToRightVec = this.LowerRight - (this.UpperLeft + (Vector3)(this.Int3Flanks.Below * BoxelSize));
             LeftToRightVec.Normalize();
             this.LeftToRight = new Int3((int)LeftToRightVec.X, (int)LeftToRightVec.Y, (int)LeftToRightVec.Z);
-            var TopToBottomVec = this.LowerRight - (this.UpperLeft + (Vector3)(this.Int3Flanks.Right * Width));
+            var TopToBottomVec = this.LowerRight - (this.UpperLeft + (Vector3)(this.Int3Flanks.Right * BoxelSize));
             TopToBottomVec.Normalize();
             this.TopToBottom = new Int3((int)TopToBottomVec.X, (int)TopToBottomVec.Y, (int)TopToBottomVec.Z);
-        }
 
-        public void ExtendRight(int Amount)
-        {
-            Width += Amount;
-        }
+            Debug.Assert(this.LeftToRight.IsUnit());
+            Debug.Assert(this.TopToBottom.IsUnit());
 
-        public void ExtendLeft(int Amount)
-        {
-            if (Side == Side.PosX || Side == Side.PosY)
-            {
-                Z -= Amount;
-            }
-            else if (Side == Side.NegX)
-            {
-                Z += Amount;
-            }
-            else
-                throw new NotImplementedException();
-            Width += Amount;
-        }
-
-        public void ExtendAbove(int Amount)
-        {
-            if (Side == Side.NegX || Side == Side.PosX)
-            {
-                Y += Amount;
-            }
-            else if (Side == Side.PosY)
-            {
-                X -= Amount;
-            }
-            else
-                throw new NotImplementedException();
-            Height += Amount;
-        }
-
-        public void ExtendBelow(int Amount)
-        {
-            Height += Amount;
+            // To align:
+            // Move FORWARD BoxelSize/2.
+            // Move ABOVE BoxelSize/2.
+            // Move LEFT BoxelSize/2.
+            this.MoveDirection(BoxelSize / 2, Int3Flanks.Forward);
+            this.MoveDirection(BoxelSize / 2, Int3Flanks.Above);
+            this.MoveDirection(BoxelSize / 2, Int3Flanks.Left);
         }
 
         public void ExtendDirection(int Amount, Int3 Direction)
@@ -218,6 +174,14 @@ namespace BoxelRenderer
             }
         }
 
+        private void MoveDirection(int Amount, Int3 Direction)
+        {
+            var Delta = (Vector3)(Amount * Direction);
+
+            this.LowerRight += Delta;
+            this.UpperLeft += Delta;
+        }
+
         public Vertex[] ToVertices()
         {
             var Result = new Vertex[6];
@@ -230,36 +194,23 @@ namespace BoxelRenderer
                2       1,4
                +        +
              */
-            if (Side == Side.PosX)
-            {
-                Result[0] = Result[5] = new Vertex(new Vector3(X, Y, Z), new Vector3(X, Y, 0));
-                Result[1] = Result[4] = new Vertex(new Vector3(X, Y - Height, Z + Width), new Vector3(X + Width, Y + Height, 0));
-                Result[2] = new Vertex(new Vector3(X, Y - Height, Z), new Vector3(X, Y + Height, 0));
-                Result[3] = new Vertex(new Vector3(X, Y, Z + Width), new Vector3(X + Width, Y, 0));
-            }
-            else if (Side == Side.NegX)
-            {
-                /*
-                   0,5       3 
-                   +        +
-                  +++      ++-              
-                        0
-                   2      1,4
-                  +-+      +-- 
-                   +        +
-                 */
-                Result[0] = Result[5] = new Vertex(new Vector3(X, Y, Z), new Vector3(X, Y, 1));
-                Result[1] = Result[4] = new Vertex(new Vector3(X, Y - Height, Z - Width), new Vector3(X + Width, Y + Height, 1));
-                Result[2] = new Vertex(new Vector3(X, Y - Height, Z), new Vector3(X, Y + Height, 1));
-                Result[3] = new Vertex(new Vector3(X, Y, Z - Width), new Vector3(X + Width, Y, 1));
-            }
-            else if (Side == Side.PosY)
-            {
-                Result[0] = Result[5] = new Vertex(new Vector3(X, Y, Z), new Vector3(X, Y, 2));
-                Result[1] = Result[4] = new Vertex(new Vector3(X + Height, Y, Z + Width), new Vector3(X + Width, Y + Height, 2));
-                Result[2] = new Vertex(new Vector3(X + Height, Y, Z), new Vector3(X, Y + Height, 2));
-                Result[3] = new Vertex(new Vector3(X, Y, Z + Width), new Vector3(X + Width, Y, 2));
-            }
+
+            var LowerLeft = ((Vector3)this.TopToBottom).Absolute();
+            LowerLeft *= this.LowerRight;
+            LowerLeft = LowerLeft.InverseMask(this.UpperLeft, (Vector3)this.TopToBottom.Absolute());
+
+            var UpperRight = ((Vector3)this.LeftToRight).Absolute();
+            UpperRight *= this.LowerRight;
+            UpperRight = UpperRight.InverseMask(this.UpperLeft, (Vector3)this.LeftToRight.Absolute());
+
+            Result[0] = Result[5] = new Vertex((Vector3)this.UpperLeft, new Vector3(this.UpperLeft.X, this.UpperLeft.Y, 0));
+            Result[1] = Result[4] = new Vertex((Vector3)this.LowerRight, new Vector3(this.LowerRight.X, this.LowerRight.Y, 0));
+            Result[2] = new Vertex(new Vector3(LowerLeft.X, LowerLeft.Y, LowerLeft.Z), new Vector3(0, 0, 0));
+            Result[3] = new Vertex(new Vector3(UpperRight.X, UpperRight.Y, UpperRight.Z), Vector3.Zero);
+
+            //Trace.WriteLine(String.Format("{4}\n{0}-----{1}\n{2}-----{3}", Result[0].Position, Result[3].Position, 
+            //    Result[2].Position, Result[1].Position, this.Side));
+
             return Result;
         }
     }

@@ -25,6 +25,12 @@ namespace ProjectBoxelGame
             SetupOutputRedirects();
             Trace.WriteLine(String.Format("Project Boxel v{0}", FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location).FileVersion));
             Trace.WriteLine("Creating RenderForm...");
+
+            var TestLevel = new ConstantRandomContainer();
+            TestLevel.Add(new BasicBoxel(Int3.Zero, 16, 0), Int3.Zero);
+            TestLevel.Add(new BasicBoxel(new Int3(0,1,0), 16, 0), new Int3(0, 1, 0));
+            TestLevel.Add(new BasicBoxel(new Int3(1, 1, 0), 16, 0), new Int3(1, 1, 0));
+            TestLevel.Add(new BasicBoxel(new Int3(0, 0, 1), 16, 0), new Int3(0, 0, 1));
             using (var Game = new Game(LoadBoxels("level.bin")))
             {
                 Trace.WriteLine("Close render window to exit.");

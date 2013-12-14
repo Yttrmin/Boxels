@@ -26,7 +26,7 @@ namespace BoxelRenderer
             : base("TiledPlaneShaders.hlsl", "VShaderTextured", null, "PShaderTextured", 
                 PrimitiveTopology.TriangleList, Device, Types)
         {
-            this.Mesher = new PlaneMesherLowPoly(BoxelSize);
+            this.Mesher = new PlaneMesherLeftRight(BoxelSize);
         }
 
         protected override void GenerateBuffers(IEnumerable<IBoxel> Boxels, SharpDX.Direct3D11.Device1 Device, 
@@ -41,7 +41,7 @@ namespace BoxelRenderer
             VertexCount = 0;
 
             var BoxelArray = Boxels.ToArray();
-            using(var Buffer = new DataBuffer(BoxelArray.Length * VertexSizeInBytes * 24))
+            using(var Buffer = new DataBuffer(BoxelArray.Length * VertexSizeInBytes * (6*6)))
             {
                 IntPtr CurrentPosition = Buffer.DataPointer;
                 int FinalSize = 0;

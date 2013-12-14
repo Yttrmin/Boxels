@@ -37,9 +37,12 @@ namespace BoxelCommon
             SideToInt3Map[Side.NegZ] = -Int3.UnitZ;
 
             SideFlanks = new Dictionary<Side, FlankingSides<Side>>();
-            SideFlanks[Side.PosX] = new FlankingSides<Side>(Side.NegZ, Side.PosZ, Side.PosY, Side.NegY);
-            SideFlanks[Side.NegX] = new FlankingSides<Side>(Side.PosZ, Side.NegZ, Side.PosY, Side.NegY);
-            SideFlanks[Side.PosY] = new FlankingSides<Side>(Side.NegZ, Side.PosZ, Side.NegX, Side.PosX);
+            SideFlanks[Side.PosX] = new FlankingSides<Side>(Side.NegZ, Side.PosZ, Side.PosY, Side.NegY, Side.PosX, Side.NegX);
+            SideFlanks[Side.NegX] = new FlankingSides<Side>(Side.PosZ, Side.NegZ, Side.PosY, Side.NegY, Side.NegX, Side.PosX);
+            SideFlanks[Side.PosY] = new FlankingSides<Side>(Side.NegZ, Side.PosZ, Side.NegX, Side.PosX, Side.PosY, Side.NegY);
+            SideFlanks[Side.NegY] = new FlankingSides<Side>(Side.PosZ, Side.NegZ, Side.NegX, Side.PosX, Side.NegY, Side.PosY);
+            SideFlanks[Side.PosZ] = new FlankingSides<Side>(Side.PosX, Side.NegX, Side.PosY, Side.NegY, Side.PosZ, Side.NegZ);
+            SideFlanks[Side.NegZ] = new FlankingSides<Side>(Side.NegX, Side.PosX, Side.PosY, Side.NegY, Side.NegZ, Side.PosZ);
         }
 
         public static int NumberOfSides(Side Sides)
@@ -94,14 +97,16 @@ namespace BoxelCommon
 
         public sealed class FlankingSides<T>
         {
-            public readonly T Left, Right, Above, Below;
+            public readonly T Left, Right, Above, Below, Forward, Backward;
 
-            public FlankingSides(T Left, T Right, T Above, T Below)
+            public FlankingSides(T Left, T Right, T Above, T Below, T Forward, T Backward)
             {
                 this.Left = Left;
                 this.Right = Right;
                 this.Above = Above;
                 this.Below = Below;
+                this.Forward = Forward;
+                this.Backward = Backward;
             }
         }
 
@@ -114,7 +119,8 @@ namespace BoxelCommon
         {
             var SideFlanks = GetSideFlanks(SideFacing);
             return new FlankingSides<Int3>(SideToInt3Map[SideFlanks.Left], SideToInt3Map[SideFlanks.Right],
-                SideToInt3Map[SideFlanks.Above], SideToInt3Map[SideFlanks.Below]);
+                SideToInt3Map[SideFlanks.Above], SideToInt3Map[SideFlanks.Below], SideToInt3Map[SideFlanks.Forward],
+                SideToInt3Map[SideFlanks.Backward]);
         }
 
         [StructLayout(LayoutKind.Auto)]
