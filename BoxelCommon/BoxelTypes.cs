@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace BoxelCommon
 {
+    [Obsolete("Use Side.")]
 	public enum Axis
 	{
 		PosX,

@@ -10,6 +10,9 @@ namespace BoxelCommon
 {
     public static class BoxelHelpers
     {
+        private static readonly IDictionary<Side, Int3> SideToInt3Map;
+        private static readonly Dictionary<Side, FlankingSides<Side>> SideFlanks;
+
         [Flags]
         public enum Side
         {
@@ -21,6 +24,22 @@ namespace BoxelCommon
             PosZ = 1 << 5,
             NegZ = 1 << 6,
             All = PosX | NegX | PosY | NegY | PosZ | NegZ
+        }
+
+        static BoxelHelpers()
+        {
+            SideToInt3Map = new Dictionary<Side, Int3>();
+            SideToInt3Map[Side.PosX] = Int3.UnitX;
+            SideToInt3Map[Side.NegX] = -Int3.UnitX;
+            SideToInt3Map[Side.PosY] = Int3.UnitY;
+            SideToInt3Map[Side.NegY] = -Int3.UnitY;
+            SideToInt3Map[Side.PosZ] = Int3.UnitZ;
+            SideToInt3Map[Side.NegZ] = -Int3.UnitZ;
+
+            SideFlanks = new Dictionary<Side, FlankingSides<Side>>();
+            SideFlanks[Side.PosX] = new FlankingSides<Side>(Side.NegZ, Side.PosZ, Side.PosY, Side.NegY);
+            SideFlanks[Side.NegX] = new FlankingSides<Side>(Side.PosZ, Side.NegZ, Side.PosY, Side.NegY);
+            SideFlanks[Side.PosY] = new FlankingSides<Side>(Side.NegZ, Side.PosZ, Side.NegX, Side.PosX);
         }
 
         public static int NumberOfSides(Side Sides)
@@ -66,6 +85,36 @@ namespace BoxelCommon
                     yield return Boxel;
                 }
             }
+        }
+
+        public static Int3 SideToInt3(Side Side)
+        {
+            return BoxelHelpers.SideToInt3Map[Side];
+        }
+
+        public sealed class FlankingSides<T>
+        {
+            public readonly T Left, Right, Above, Below;
+
+            public FlankingSides(T Left, T Right, T Above, T Below)
+            {
+                this.Left = Left;
+                this.Right = Right;
+                this.Above = Above;
+                this.Below = Below;
+            }
+        }
+
+        public static FlankingSides<Side> GetSideFlanks(Side SideFacing)
+        {
+            return BoxelHelpers.SideFlanks[SideFacing];
+        }
+
+        public static FlankingSides<Int3> GetInt3Flanks(Side SideFacing)
+        {
+            var SideFlanks = GetSideFlanks(SideFacing);
+            return new FlankingSides<Int3>(SideToInt3Map[SideFlanks.Left], SideToInt3Map[SideFlanks.Right],
+                SideToInt3Map[SideFlanks.Above], SideToInt3Map[SideFlanks.Below]);
         }
 
         [StructLayout(LayoutKind.Auto)]

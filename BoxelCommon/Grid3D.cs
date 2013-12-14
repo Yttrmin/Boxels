@@ -12,6 +12,7 @@ namespace BoxelCommon
     public sealed class Grid3D<T> where T: IPositionable
     {
         private readonly IDictionary<int, T> Contents;
+        [Obsolete("Use BoxelHelpers.")]
         private static readonly IDictionary<Side, Int3> SideToUnit;
         public int Count { get { throw new NotImplementedException(); } }
         public T this[int Index] { get { throw new NotImplementedException(); } set { throw new NotImplementedException(); } }
@@ -125,6 +126,13 @@ namespace BoxelCommon
             }
         }
 
+        /// <summary>
+        /// Returns all items in Grid from Position along Axis. Stops when it encounters an empty
+        /// space, even if there may be more items beyond the space along Axis.
+        /// </summary>
+        /// <param name="Position"></param>
+        /// <param name="Axis"></param>
+        /// <returns>Items along axis. Guaranteed to be in order from closest to farthest.</returns>
         public IEnumerable<T> AllItemsFromIndexAlongAxis(Int3 Position, Side Axis)
         {
 

@@ -19,6 +19,12 @@ namespace BoxelCommon
             return ZOrderCurveHelper.XWeave[Self.X] | ZOrderCurveHelper.YWeave[Self.Y] | ZOrderCurveHelper.ZWeave[Self.Z];
         }
 
+        public static bool IsUnit(this Int3 Self)
+        {
+            return Self == Int3.UnitX || Self == -Int3.UnitX || Self == Int3.UnitY || Self == -Int3.UnitY ||
+                Self == Int3.UnitZ || Self == -Int3.UnitZ;
+        }
+
         public static int? ToIntOrNull(this Int3 Self)
         {
             int Result;
