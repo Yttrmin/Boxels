@@ -64,8 +64,7 @@ namespace BoxelRenderer
             this.Profiler = Device.Profiler;
             this.ConstructTextures(Device.D3DDevice);
         }
-
-        [Timer]
+        
         public void SetView(IEnumerable<IBoxel> Boxels, int SphereHash, Device1 Device)
         {
             Debug.Assert(SphereHash != this.ViewHash);
@@ -114,8 +113,7 @@ namespace BoxelRenderer
         /// </summary>
         /// <param name="Context"></param>
         protected abstract void PreRender(DeviceContext1 Context);
-
-        [Timer]
+        
         protected abstract void GenerateBuffers(IEnumerable<IBoxel> Boxels, Device1 Device, out Buffer VertexBuffer,
             out VertexBufferBinding Binding, out int VertexCount, out Buffer IndexBuffer, out Buffer InstanceBuffer,
             out VertexBufferBinding InstanceBinding, out int InstanceCount, int VertexSizeInBytes);

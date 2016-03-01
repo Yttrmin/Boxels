@@ -61,8 +61,7 @@ namespace BoxelCommon
             Chunk.Add(Boxel, InternPos);
             Boxel.Container = this;
         }
-
-        [Timer]
+        
         public IEnumerable<IBoxel> AllBoxels
         {
             get
@@ -129,7 +128,6 @@ namespace BoxelCommon
         }
 
         [ProtoAfterDeserialization]
-        [Timer]
         private void PostDeserializationSetContainerReference()
         {
             foreach (var Boxel in this.AllBoxels)

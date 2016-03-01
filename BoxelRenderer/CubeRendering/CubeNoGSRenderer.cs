@@ -85,7 +85,6 @@ namespace BoxelRenderer
         }
 
         //@TODO - Remove me. Just for timing.
-        [Timer]
         private IBoxel[] GetBoxelArray(IEnumerable<IBoxel> Boxels)
         {
             return Boxels as IBoxel[] ?? Boxels.ToArray();

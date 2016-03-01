@@ -35,28 +35,37 @@
     <Reference Include="PostSharp">
       <HintPath>..\packages\PostSharp.3.0.30\lib\net20\PostSharp.dll</HintPath>
     </Reference>
-    <Reference Include="SharpDX, Version=2.5.1.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\SharpDX-nightly\Bin\DirectX11_2-net40\SharpDX.dll</HintPath>
+    <Reference Include="SharpDX, Version=3.0.1.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
+      <HintPath>..\packages\SharpDX.3.0.1\lib\net45\SharpDX.dll</HintPath>
+      <Private>True</Private>
     </Reference>
-    <Reference Include="SharpDX.D3DCompiler, Version=2.5.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\SharpDX-nightly\Bin\DirectX11_1-net40\SharpDX.D3DCompiler.dll</HintPath>
+    <Reference Include="SharpDX.D3DCompiler, Version=3.0.1.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
+      <HintPath>..\packages\SharpDX.D3DCompiler.3.0.1\lib\net45\SharpDX.D3DCompiler.dll</HintPath>
+      <Private>True</Private>
     </Reference>
-    <Reference Include="SharpDX.Direct2D1, Version=2.5.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\SharpDX-nightly\Bin\DirectX11_2-net40\SharpDX.Direct2D1.dll</HintPath>
+    <Reference Include="SharpDX.Desktop, Version=3.0.1.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
+      <HintPath>..\packages\SharpDX.Desktop.3.0.1\lib\net45\SharpDX.Desktop.dll</HintPath>
+      <Private>True</Private>
     </Reference>
-    <Reference Include="SharpDX.Direct3D11, Version=2.5.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\SharpDX-nightly\Bin\DirectX11_2-net40\SharpDX.Direct3D11.dll</HintPath>
+    <Reference Include="SharpDX.Direct2D1, Version=3.0.1.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
+      <HintPath>..\packages\SharpDX.Direct2D1.3.0.1\lib\net45\SharpDX.Direct2D1.dll</HintPath>
+      <Private>True</Private>
     </Reference>
-    <Reference Include="SharpDX.DXGI, Version=2.5.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\SharpDX-nightly\Bin\DirectX11_2-net40\SharpDX.DXGI.dll</HintPath>
+    <Reference Include="SharpDX.Direct3D11, Version=3.0.1.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
+      <HintPath>..\packages\SharpDX.Direct3D11.3.0.1\lib\net45\SharpDX.Direct3D11.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="SharpDX.DXGI, Version=3.0.1.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
+      <HintPath>..\packages\SharpDX.DXGI.3.0.1\lib\net45\SharpDX.DXGI.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="SharpDX.Mathematics, Version=3.0.1.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
+      <HintPath>..\packages\SharpDX.Mathematics.3.0.1\lib\net45\SharpDX.Mathematics.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -70,8 +79,6 @@
     <Compile Include="CubeRendering\CubeTypeManager.cs" />
     <Compile Include="GPUProfiler.cs" />
     <Compile Include="IBoxelMesher.cs" />
-    <Compile Include="IRenderables.cs" />
-    <Compile Include="MarchingCubesRenderer.cs" />
     <Compile Include="NullRenderer.cs" />
     <Compile Include="PointRenderer.cs" />
     <Compile Include="IRenderer.cs" />
@@ -79,8 +86,6 @@
     <Compile Include="RenderDevice.cs" />
     <Compile Include="RenderDevice2D.cs" />
     <Compile Include="RendererHelpers.cs" />
-    <Compile Include="RenderManager.cs" />
-    <Compile Include="RequiresPostSharp.cs" />
     <Compile Include="SmartCubeImmediate.cs" />
     <Compile Include="TextStack.cs" />
     <Compile Include="TextureManager.cs" />
@@ -109,13 +114,10 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_BuildVersioningStyle="None.None.None.Increment" BuildVersion_UpdateFileVersion="True" />
+      <UserProperties BuildVersion_UpdateFileVersion="True" BuildVersion_BuildVersioningStyle="None.None.None.Increment" />
     </VisualStudio>
   </ProjectExtensions>
   <Import Project="..\packages\PostSharp.3.0.30\tools\PostSharp.targets" Condition="Exists('..\packages\PostSharp.3.0.30\tools\PostSharp.targets')" />

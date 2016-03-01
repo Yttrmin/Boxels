@@ -78,7 +78,6 @@ namespace BoxelCommon
         /// <param name="Boxels"></param>
         /// <param name="Container"></param>
         /// <returns></returns>
-        [Timer]
         public static IEnumerable<IBoxel> OcclusionCull(IEnumerable<IBoxel> Boxels)
         {
             foreach (var Boxel in Boxels)
@@ -162,8 +161,7 @@ namespace BoxelCommon
                 }
             }
         }
-
-        [Timer]
+        
         public static IEnumerable<VisibleBoxel> SideOcclusionCull(IEnumerable<IBoxel> Boxels)
         {
             foreach (var Boxel in Boxels)

@@ -53,7 +53,8 @@ namespace BoxelLib
         private BoxelManager(BoxelTypes<ICubeBoxelType> Types, RenderDevice RenderDevice)
         {
             this.BoxelTypes = Types;
-            this.Renderer = new TiledPlaneRenderer(RenderDevice, this.BoxelTypes);
+            //this.Renderer = new TiledPlaneRenderer(RenderDevice, this.BoxelTypes);
+            this.Renderer = new CubeNoGSRenderer(RenderDevice, this.BoxelTypes);
             this.DrawDistance = 32;
             this.RenderDevice = RenderDevice;
             this.PerFrameData = new Buffer(RenderDevice.D3DDevice, Matrix.SizeInBytes, ResourceUsage.Dynamic,
@@ -121,8 +122,7 @@ namespace BoxelLib
             this.RenderDevice.Profiler.RecordTimeStamp(GPUProfiler.TimeStamp.PerFrameBufferUpdate);
             this.Renderer.Render(this.RenderDevice.D3DDevice.ImmediateContext1);
         }
-
-        [Timer]
+        
         public void Save(string Filename)
         {
             using (var SaveFile = File.Create(Filename))

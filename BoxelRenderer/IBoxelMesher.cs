@@ -61,8 +61,7 @@ namespace BoxelRenderer
         {
             this.BoxelSize = BoxelSize;
         }
-
-        [Timer]
+        
         public Rectangle3D[] CreateRectangleOutline(IEnumerable<IBoxel> Boxels)
         {
             var Checked = new Dictionary<Side, HashSet<IBoxel>>();
